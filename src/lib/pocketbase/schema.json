@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-05T21:11:41.294Z",
+  "generatedAt": "2026-11-05T21:18:22.003Z",
   "collections": [
     {
       "name": "users",
@@ -29,19 +29,14 @@
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": [
-            "onCreate"
-          ]
+          "autodateTriggers": ["onCreate"]
         },
         {
           "name": "updated",
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": [
-            "onCreate",
-            "onUpdate"
-          ]
+          "autodateTriggers": ["onCreate", "onUpdate"]
         }
       ],
       "indexes": [
@@ -83,11 +78,7 @@
           "type": "select",
           "required": true,
           "system": false,
-          "selectValues": [
-            "baixa",
-            "media",
-            "alta"
-          ]
+          "selectValues": ["baixa", "media", "alta"]
         },
         {
           "name": "due",
@@ -100,19 +91,14 @@
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": [
-            "onCreate"
-          ]
+          "autodateTriggers": ["onCreate"]
         },
         {
           "name": "updated",
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": [
-            "onCreate",
-            "onUpdate"
-          ]
+          "autodateTriggers": ["onCreate", "onUpdate"]
         }
       ],
       "indexes": [
@@ -149,10 +135,7 @@
           "type": "select",
           "required": true,
           "system": false,
-          "selectValues": [
-            "receita",
-            "despesa"
-          ]
+          "selectValues": ["receita", "despesa"]
         },
         {
           "name": "category",
@@ -181,19 +164,14 @@
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": [
-            "onCreate"
-          ]
+          "autodateTriggers": ["onCreate"]
         },
         {
           "name": "updated",
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": [
-            "onCreate",
-            "onUpdate"
-          ]
+          "autodateTriggers": ["onCreate", "onUpdate"]
         }
       ],
       "indexes": [
@@ -236,19 +214,14 @@
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": [
-            "onCreate"
-          ]
+          "autodateTriggers": ["onCreate"]
         },
         {
           "name": "updated",
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": [
-            "onCreate",
-            "onUpdate"
-          ]
+          "autodateTriggers": ["onCreate", "onUpdate"]
         }
       ],
       "indexes": [
@@ -284,12 +257,7 @@
           "type": "select",
           "required": true,
           "system": false,
-          "selectValues": [
-            "verde",
-            "ambar",
-            "azul",
-            "coral"
-          ]
+          "selectValues": ["verde", "ambar", "azul", "coral"]
         },
         {
           "name": "active",
@@ -302,19 +270,14 @@
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": [
-            "onCreate"
-          ]
+          "autodateTriggers": ["onCreate"]
         },
         {
           "name": "updated",
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": [
-            "onCreate",
-            "onUpdate"
-          ]
+          "autodateTriggers": ["onCreate", "onUpdate"]
         }
       ],
       "indexes": []
@@ -348,19 +311,14 @@
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": [
-            "onCreate"
-          ]
+          "autodateTriggers": ["onCreate"]
         },
         {
           "name": "updated",
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": [
-            "onCreate",
-            "onUpdate"
-          ]
+          "autodateTriggers": ["onCreate", "onUpdate"]
         }
       ],
       "indexes": [
@@ -408,19 +366,14 @@
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": [
-            "onCreate"
-          ]
+          "autodateTriggers": ["onCreate"]
         },
         {
           "name": "updated",
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": [
-            "onCreate",
-            "onUpdate"
-          ]
+          "autodateTriggers": ["onCreate", "onUpdate"]
         },
         {
           "name": "is_club",
@@ -429,9 +382,7 @@
           "system": false
         }
       ],
-      "indexes": [
-        "CREATE INDEX idx_programs_name ON programs (name)"
-      ]
+      "indexes": ["CREATE INDEX idx_programs_name ON programs (name)"]
     },
     {
       "name": "program_entries",
@@ -449,10 +400,7 @@
           "type": "select",
           "required": true,
           "system": false,
-          "selectValues": [
-            "entrada",
-            "saida"
-          ]
+          "selectValues": ["entrada", "saida"]
         },
         {
           "name": "description",
@@ -483,19 +431,14 @@
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": [
-            "onCreate"
-          ]
+          "autodateTriggers": ["onCreate"]
         },
         {
           "name": "updated",
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": [
-            "onCreate",
-            "onUpdate"
-          ]
+          "autodateTriggers": ["onCreate", "onUpdate"]
         },
         {
           "name": "program",
@@ -544,10 +487,7 @@
           "type": "select",
           "required": true,
           "system": false,
-          "selectValues": [
-            "milhas",
-            "dinheiro"
-          ]
+          "selectValues": ["milhas", "dinheiro"]
         },
         {
           "name": "miles_used",
@@ -578,19 +518,14 @@
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": [
-            "onCreate"
-          ]
+          "autodateTriggers": ["onCreate"]
         },
         {
           "name": "updated",
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": [
-            "onCreate",
-            "onUpdate"
-          ]
+          "autodateTriggers": ["onCreate", "onUpdate"]
         },
         {
           "name": "program",
@@ -605,11 +540,113 @@
           "required": false,
           "system": false,
           "collectionRef": "program_entries"
+        },
+        {
+          "name": "booking_code",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "status",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": ["confirmada", "em_espera", "cancelada", "utilizada"]
+        },
+        {
+          "name": "origin",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "destination",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "cabin",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": ["economica", "premium", "executiva", "primeira"]
+        },
+        {
+          "name": "roundtrip",
+          "type": "bool",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "outbound_date",
+          "type": "date",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "outbound_departure",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "outbound_arrival",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "return_date",
+          "type": "date",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "return_departure",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "return_arrival",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "layovers",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "passengers",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "milheiro_custom",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "issued_at",
+          "type": "date",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "notes",
+          "type": "text",
+          "required": false,
+          "system": false
         }
       ],
-      "indexes": [
-        "CREATE INDEX idx_flights_departure ON flights (departure)"
-      ]
+      "indexes": ["CREATE INDEX idx_flights_departure ON flights (departure)"]
     },
     {
       "name": "hotels",
@@ -657,10 +694,7 @@
           "type": "select",
           "required": true,
           "system": false,
-          "selectValues": [
-            "dinheiro",
-            "milhas"
-          ]
+          "selectValues": ["dinheiro", "milhas"]
         },
         {
           "name": "miles_used",
@@ -673,19 +707,14 @@
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": [
-            "onCreate"
-          ]
+          "autodateTriggers": ["onCreate"]
         },
         {
           "name": "updated",
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": [
-            "onCreate",
-            "onUpdate"
-          ]
+          "autodateTriggers": ["onCreate", "onUpdate"]
         },
         {
           "name": "program",
@@ -702,9 +731,7 @@
           "collectionRef": "program_entries"
         }
       ],
-      "indexes": [
-        "CREATE INDEX idx_hotels_check_out ON hotels (check_out)"
-      ]
+      "indexes": ["CREATE INDEX idx_hotels_check_out ON hotels (check_out)"]
     },
     {
       "name": "passengers",
@@ -746,19 +773,14 @@
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": [
-            "onCreate"
-          ]
+          "autodateTriggers": ["onCreate"]
         },
         {
           "name": "updated",
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": [
-            "onCreate",
-            "onUpdate"
-          ]
+          "autodateTriggers": ["onCreate", "onUpdate"]
         },
         {
           "name": "cpf",
@@ -797,9 +819,7 @@
           "system": false
         }
       ],
-      "indexes": [
-        "CREATE INDEX idx_passengers_name ON passengers (name)"
-      ]
+      "indexes": ["CREATE INDEX idx_passengers_name ON passengers (name)"]
     },
     {
       "name": "vip_lounges",
@@ -835,24 +855,17 @@
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": [
-            "onCreate"
-          ]
+          "autodateTriggers": ["onCreate"]
         },
         {
           "name": "updated",
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": [
-            "onCreate",
-            "onUpdate"
-          ]
+          "autodateTriggers": ["onCreate", "onUpdate"]
         }
       ],
-      "indexes": [
-        "CREATE INDEX idx_vip_lounges_airport ON vip_lounges (airport)"
-      ]
+      "indexes": ["CREATE INDEX idx_vip_lounges_airport ON vip_lounges (airport)"]
     },
     {
       "name": "credit_cards",
@@ -889,24 +902,41 @@
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": [
-            "onCreate"
-          ]
+          "autodateTriggers": ["onCreate"]
         },
         {
           "name": "updated",
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": [
-            "onCreate",
-            "onUpdate"
-          ]
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        },
+        {
+          "name": "pontos_por_real",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "anuidade",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "fechamento",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "ativo",
+          "type": "bool",
+          "required": false,
+          "system": false
         }
       ],
-      "indexes": [
-        "CREATE INDEX idx_credit_cards_name ON credit_cards (name)"
-      ]
+      "indexes": ["CREATE INDEX idx_credit_cards_name ON credit_cards (name)"]
     }
   ]
 }
