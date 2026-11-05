@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-05T17:59:23.503Z",
+  "generatedAt": "2026-11-05T20:50:40.513Z",
   "collections": [
     {
       "name": "users",
@@ -374,6 +374,12 @@
           "required": false,
           "system": false,
           "autodateTriggers": ["onCreate", "onUpdate"]
+        },
+        {
+          "name": "is_club",
+          "type": "bool",
+          "required": false,
+          "system": false
         }
       ],
       "indexes": ["CREATE INDEX idx_programs_name ON programs (name)"]
@@ -720,6 +726,53 @@
         }
       ],
       "indexes": ["CREATE INDEX idx_vip_lounges_airport ON vip_lounges (airport)"]
+    },
+    {
+      "name": "credit_cards",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != ''",
+        "view": "@request.auth.id != ''",
+        "create": "@request.auth.id != ''",
+        "update": "@request.auth.id != ''",
+        "delete": "@request.auth.id != ''"
+      },
+      "fields": [
+        {
+          "name": "name",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "brand",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "program",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "programs"
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": ["CREATE INDEX idx_credit_cards_name ON credit_cards (name)"]
     }
   ]
 }

@@ -220,12 +220,14 @@ export default function Passagens() {
         )}
 
         <FlightFormSheet open={sheetOpen} onClose={() => setSheetOpen(false)} programs={programs} />
-        <ConfirmDelete
-          title="Excluir passagem"
-          description="O registro da passagem será removido. O extrato do programa não é alterado."
-          onConfirm={handleDelete}
-          onCancel={() => setDeleteId(null)}
-        />
+        {deleteId && (
+          <ConfirmDelete
+            title="Excluir passagem"
+            description="O registro da passagem será removido. O extrato do programa não é alterado."
+            onConfirm={handleDelete}
+            onCancel={() => setDeleteId(null)}
+          />
+        )}
       </div>
     </Layout>
   )

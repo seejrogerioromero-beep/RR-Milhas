@@ -16,6 +16,17 @@ export interface ProgramRecord extends RecordModel {
   cost_per_thousand: number
   /** Valor de mercado estimado de 1.000 milhas */
   market_per_thousand: number
+  /** marcado como clube/banco — pode ser origem de transferência de pontos */
+  is_club?: boolean
+}
+
+export interface CreditCardRecord extends RecordModel {
+  name: string
+  brand?: string
+  program?: string
+  expand?: {
+    program?: ProgramRecord
+  }
 }
 
 export type ProgramEntryType = 'entrada' | 'saida'
