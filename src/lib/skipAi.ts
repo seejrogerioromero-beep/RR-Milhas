@@ -1,9 +1,6 @@
 // Server-side AI helpers for the Skip Cloud backend (pb_hooks $ai endpoints).
-// NOTE: this file was truncated by accident during a refactor of this project and
-// was rebuilt from its public API surface (exports below). No page in this app
-// imports it today; it is kept so future AI features keep the same contract.
 
-import pb from '@/lib/pocketbase/client'
+import pb, { BACKEND_URL } from '@/lib/pocketbase/client'
 
 export interface OpenAIChatResult {
   content: string
@@ -68,6 +65,8 @@ export function displayableMessages(messages: AgentMessage[]): DisplayMessage[] 
 
 /**
  * Streams an agent chat from the backend hook (`/backend/v1/ai/agent-chat`).
+ * The request goes to the ABSOLUTE backend URL (pb.baseURL / VITE_POCKETBASE_URL),
+ * never to the frontend origin — the SPA host does not proxy to the backend.
  * The backend proxies the LLM so no API key ever reaches the browser.
  */
 export async function streamAgentChat(
@@ -80,7 +79,7 @@ export async function streamAgentChat(
 
   let response: Response
   try {
-    response = await fetch(`${pb.baseURL}/backend/v1/ai/agent-chat`, {
+    response = await fetch(`${BACKEND_URL}/backend/v1/ai/agent-chat`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ agentId, messages }),
