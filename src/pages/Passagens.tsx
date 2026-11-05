@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { Plus, Plane, Coins, Trash2 } from 'lucide-react'
 import { PageContainer as Layout } from '@/components/Layout'
 import { Card } from '@/components/ui/card'
@@ -7,16 +7,17 @@ import pb from '@/lib/pocketbase/client'
 import { useRealtime } from '@/hooks/use-realtime'
 import { useToast } from '@/hooks/use-toast'
 import type { FlightRecord, ProgramRecord } from '@/types/database'
-import {
-  formatMiles,
-  formatBRL,
-  formatDateTimeBR,
-  computeFlightSavings,
-  maskBRL,
-  parseNumberInput,
-} from '@/lib/miles'
-import { FlightFormSheet, ConfirmDelete } from '@/components/forms'
+import { formatMiles, formatBRL, formatDateTimeBR, computeFlightSavings } from '@/lib/miles'
+import { ConfirmDelete } from '@/components/forms'
+import { FlightFormDialog } from '@/components/FlightFormDialog'
 import { cn } from '@/lib/utils'
+
+const STATUS_LABELS: Record<string, string> = {
+  confirmada: 'Confirmada',
+  em_espera: 'Em espera',
+  cancelada: 'Cancelada',
+  utilizada: 'Utilizada',
+}
 
 export default function Passagens() {
   const { toast } = useToast()
@@ -56,7 +57,10 @@ export default function Passagens() {
       fees: f.fees,
       cash_amount: f.cash_amount,
       reference_value: f.reference_value,
-      program_cost_per_thousand: f.expand?.program?.cost_per_thousand || 0,
+      program_cost_per_thousand:
+        f.milheiro_custom != null && f.milheiro_custom > 0
+          ? f.milheiro_custom
+          : f.expand?.program?.cost_per_thousand || 0,
     })
     return sum + (s?.savings || 0)
   }, 0)
@@ -153,7 +157,10 @@ export default function Passagens() {
                 fees: f.fees,
                 cash_amount: f.cash_amount,
                 reference_value: f.reference_value,
-                program_cost_per_thousand: f.expand?.program?.cost_per_thousand || 0,
+                program_cost_per_thousand:
+                  f.milheiro_custom != null && f.milheiro_custom > 0
+                    ? f.milheiro_custom
+                    : f.expand?.program?.cost_per_thousand || 0,
               })
               return (
                 <Card key={f.id} className="paper-card p-5">
@@ -173,12 +180,25 @@ export default function Passagens() {
                         >
                           {f.payment_method === 'milhas' ? 'milhas' : 'dinheiro'}
                         </span>
+                        {f.booking_code && (
+                          <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-[#16418F]/10 text-[#16418F]">
+                            {f.booking_code}
+                          </span>
+                        )}
+                        {f.status && f.status !== 'confirmada' && STATUS_LABELS[f.status] && (
+                          <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-[#6E6A5E]/10 text-[#6E6A5E]">
+                            {STATUS_LABELS[f.status]}
+                          </span>
+                        )}
                       </div>
                       <p className="text-xs text-[#6E6A5E] mt-1">
                         {formatDateTimeBR(f.departure)}
                         {f.airline ? ` · ${f.airline}` : ''}
                         {f.expand?.program ? ` · ${f.expand.program.name}` : ''}
                       </p>
+                      {f.passengers && (
+                        <p className="text-xs text-[#6E6A5E] mt-1">{f.passengers}</p>
+                      )}
                       <div className="flex flex-wrap gap-x-5 gap-y-1 mt-2 text-sm">
                         {f.payment_method === 'milhas' ? (
                           <>
@@ -219,7 +239,11 @@ export default function Passagens() {
           </div>
         )}
 
-        <FlightFormSheet open={sheetOpen} onClose={() => setSheetOpen(false)} programs={programs} />
+        <FlightFormDialog
+          open={sheetOpen}
+          onClose={() => setSheetOpen(false)}
+          programs={programs}
+        />
         {deleteId && (
           <ConfirmDelete
             title="Excluir passagem"

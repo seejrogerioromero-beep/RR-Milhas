@@ -3,17 +3,13 @@ import { Plus, CreditCard, Star, Trash2, Users, Building2 } from 'lucide-react'
 import pb from '@/lib/pocketbase/client'
 import { useToast } from '@/hooks/use-toast'
 import type { ProgramRecord, CreditCardRecord } from '@/types/database'
-import { formatMiles } from '@/lib/miles'
+import { formatMiles, formatBRL } from '@/lib/miles'
 import { getErrorMessage } from '@/lib/pocketbase/errors'
 import { ProgramFormSheet } from '@/components/forms'
-import { Sheet } from '@/components/Sheet'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { ConfirmDelete } from '@/components/forms'
+import { CardFormDialog } from '@/components/CardFormDialog'
 import { cn } from '@/lib/utils'
-
-const BRANDS = ['Visa', 'Mastercard', 'Elo', 'Amex', 'Hipercard', 'Diners', 'Outra']
 
 /**
  * Aba Clubes: programas marcados como clube/banco — origem de transferência
@@ -198,11 +194,6 @@ export function CartoesTab({
   const [formOpen, setFormOpen] = useState(false)
   const [editing, setEditing] = useState<CreditCardRecord | null>(null)
   const [deleteId, setDeleteId] = useState<string | null>(null)
-  const [saving, setSaving] = useState(false)
-  const [name, setName] = useState('')
-  const [brand, setBrand] = useState('')
-  const [programId, setProgramId] = useState('')
-  const [errors, setErrors] = useState<Record<string, string>>({})
 
   const reloadCards = async () => {
     try {
@@ -215,57 +206,6 @@ export function CartoesTab({
       console.error('Falha ao carregar cartões', err)
     } finally {
       setLoading(false)
-    }
-  }
-
-  const openNew = () => {
-    setEditing(null)
-    setName('')
-    setBrand('')
-    setProgramId('')
-    setErrors({})
-    setFormOpen(true)
-  }
-
-  const openEdit = (card: CreditCardRecord) => {
-    setEditing(card)
-    setName(card.name)
-    setBrand(card.brand || '')
-    setProgramId(card.program || '')
-    setErrors({})
-    setFormOpen(true)
-  }
-
-  const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault()
-    const errs: Record<string, string> = {}
-    if (!name.trim()) errs.name = 'Informe o nome do cartão'
-    if (!programId) errs.program = 'Vincule o programa de pontos'
-    if (Object.keys(errs).length > 0) {
-      setErrors(errs)
-      return
-    }
-    setSaving(true)
-    try {
-      const data = { name: name.trim(), brand: brand || undefined, program: programId }
-      if (editing) {
-        await pb.collection('credit_cards').update(editing.id, data)
-        toast({ title: 'Cartão atualizado' })
-      } else {
-        await pb.collection('credit_cards').create(data)
-        toast({ title: 'Cartão cadastrado' })
-      }
-      setFormOpen(false)
-      onChanged()
-      reloadCards()
-    } catch (err) {
-      toast({
-        title: 'Erro ao salvar cartão',
-        description: getErrorMessage(err),
-        variant: 'destructive',
-      })
-    } finally {
-      setSaving(false)
     }
   }
 
@@ -297,7 +237,7 @@ export function CartoesTab({
           </p>
         </div>
         <Button
-          onClick={openNew}
+          onClick={() => setFormOpen(true)}
           className="rounded-xl bg-[#16418F] hover:bg-[#0F2C61] text-white font-medium"
         >
           <Plus className="w-4 h-4 mr-1.5" /> Novo cartão
@@ -325,13 +265,33 @@ export function CartoesTab({
                   <CreditCard className="w-4 h-4 text-[#0E8FB8] shrink-0" /> {card.name}
                 </p>
                 <p className="text-xs text-[#6E6A5E] mt-1">
-                  {card.brand ? `${card.brand} · ` : ''}
                   {card.expand?.program?.name || 'Sem programa'}
+                </p>
+                <p className="text-xs text-[#6E6A5E] mt-0.5">
+                  {card.pontos_por_real != null && card.pontos_por_real > 0
+                    ? `${card.pontos_por_real.toLocaleString('pt-BR', { maximumFractionDigits: 2 })} pt/R$`
+                    : '—'}
+                  {' · '}
+                  {formatBRL(card.anuidade || 0)}
+                  {card.fechamento ? ` · fecha dia ${card.fechamento}` : ''}
+                </p>
+                <p
+                  className={cn(
+                    'mt-1.5 inline-flex text-[11px] font-semibold px-2 py-0.5 rounded-full',
+                    card.ativo !== false
+                      ? 'bg-[#0E8FB8]/10 text-[#0E8FB8]'
+                      : 'bg-[#6E6A5E]/10 text-[#6E6A5E]',
+                  )}
+                >
+                  {card.ativo !== false ? 'Ativo' : 'Inativo'}
                 </p>
               </div>
               <div className="flex gap-1 shrink-0">
                 <button
-                  onClick={() => openEdit(card)}
+                  onClick={() => {
+                    setEditing(card)
+                    setFormOpen(true)
+                  }}
                   className="h-8 px-2.5 rounded-lg text-xs font-semibold text-[#16418F] hover:bg-[#16418F]/10"
                 >
                   Editar
@@ -349,78 +309,19 @@ export function CartoesTab({
         </div>
       )}
 
-      <Sheet
+      <CardFormDialog
         open={formOpen}
-        onClose={() => setFormOpen(false)}
-        title={editing ? 'Editar cartão' : 'Novo cartão'}
-      >
-        <form onSubmit={handleSave} className="space-y-4">
-          <div className="space-y-1.5">
-            <Label htmlFor="card-name" className="text-xs font-semibold text-[#23201A]">
-              Nome do cartão *
-            </Label>
-            <Input
-              id="card-name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              maxLength={80}
-              placeholder="Ex: Itaú Click Visa"
-              className={cn('rrmilhas-input', errors.name && 'border-[#C4452F]')}
-            />
-            {errors.name && <p className="text-xs text-[#C4452F]">{errors.name}</p>}
-          </div>
-
-          <div className="space-y-1.5">
-            <Label htmlFor="card-brand" className="text-xs font-semibold text-[#23201A]">
-              Bandeira (opcional)
-            </Label>
-            <select
-              id="card-brand"
-              value={brand}
-              onChange={(e) => setBrand(e.target.value)}
-              className="rrmilhas-input w-full h-11 px-3 text-sm text-[#23201A] bg-white"
-            >
-              <option value="">Sem bandeira</option>
-              {BRANDS.map((b) => (
-                <option key={b} value={b}>
-                  {b}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="space-y-1.5">
-            <Label htmlFor="card-program" className="text-xs font-semibold text-[#23201A]">
-              Programa de pontos *
-            </Label>
-            <select
-              id="card-program"
-              value={programId}
-              onChange={(e) => setProgramId(e.target.value)}
-              className={cn(
-                'rrmilhas-input w-full h-11 px-3 text-sm text-[#23201A] bg-white',
-                errors.program && 'border-[#C4452F]',
-              )}
-            >
-              <option value="">Selecione o programa</option>
-              {programs.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name}
-                </option>
-              ))}
-            </select>
-            {errors.program && <p className="text-xs text-[#C4452F]">{errors.program}</p>}
-          </div>
-
-          <Button
-            type="submit"
-            disabled={saving || programs.length === 0}
-            className="w-full h-11 rounded-xl bg-[#16418F] hover:bg-[#0F2C61] text-white font-medium active:scale-[0.98]"
-          >
-            {saving ? 'Salvando...' : editing ? 'Salvar alterações' : 'Cadastrar cartão'}
-          </Button>
-        </form>
-      </Sheet>
+        onClose={() => {
+          setFormOpen(false)
+          setEditing(null)
+        }}
+        programs={programs}
+        initialCard={editing}
+        onSaved={() => {
+          onChanged()
+          reloadCards()
+        }}
+      />
 
       {deleteId && (
         <ConfirmDelete
