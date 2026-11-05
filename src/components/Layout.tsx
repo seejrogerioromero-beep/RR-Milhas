@@ -52,14 +52,16 @@ export default function Layout() {
       {/* Desktop / Tablet Sidebar */}
       <aside
         className={cn(
-          'hidden md:flex flex-col bg-[#1E2A24] text-white fixed inset-y-0 left-0 z-40',
+          'hidden md:flex flex-col bg-[#0B1B36] text-white fixed inset-y-0 left-0 z-40',
           'w-16 lg:w-[264px] transition-[width] duration-200',
         )}
       >
         {/* Brand */}
         <div className="flex items-center gap-3 px-4 lg:px-5 pt-6 pb-5">
           <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center shrink-0">
-            <span className="font-serif font-bold text-lg tracking-wider text-white">OVV</span>
+            <span className="font-serif font-bold text-[11px] tracking-[0.08em] text-white">
+              RRMILHAS
+            </span>
           </div>
           <div className="hidden lg:block">
             <div className="flex items-center gap-1.5">
@@ -142,7 +144,7 @@ export default function Layout() {
                 <Menu className="w-5 h-5 text-[#23201A]" />
               </button>
               <span className="font-serif text-xl md:text-2xl font-semibold text-[#23201A] truncate">
-                {NAV_ITEMS.find((n) => n.to === location.pathname)?.label || 'OVV'}
+                {NAV_ITEMS.find((n) => n.to === location.pathname)?.label || 'RRMILHAS'}
               </span>
             </div>
 
@@ -162,7 +164,7 @@ export default function Layout() {
               >
                 <Avatar className="w-9 h-9 rounded-full border border-[#E8E2D6] hover:ring-2 hover:ring-[#E8A33D]/40 transition-all">
                   <AvatarImage src={avatarUrl} alt={user?.name} />
-                  <AvatarFallback className="bg-[#1E5C46] text-white text-xs font-semibold">
+                  <AvatarFallback className="bg-[#16418F] text-white text-xs font-semibold">
                     {userInitial}
                   </AvatarFallback>
                 </Avatar>
@@ -186,9 +188,9 @@ export default function Layout() {
             className="fixed inset-0 z-50 bg-[#23201A]/40 backdrop-blur-sm animate-fade-in"
             onClick={() => setDrawerOpen(false)}
           />
-          <div className="fixed inset-y-0 right-0 z-50 w-72 bg-[#1E2A24] text-white sheet-slide flex flex-col shadow-2xl">
+          <div className="fixed inset-y-0 right-0 z-50 w-72 bg-[#0B1B36] text-white sheet-slide flex flex-col shadow-2xl">
             <div className="flex items-center justify-between px-5 pt-6 pb-4">
-              <span className="font-serif text-lg font-bold tracking-wider">OVV</span>
+              <span className="font-serif text-lg font-bold tracking-[0.06em]">RRMILHAS</span>
               <button
                 onClick={() => setDrawerOpen(false)}
                 className="grid place-items-center w-9 h-9 rounded-lg hover:bg-white/10"
@@ -261,7 +263,7 @@ export default function Layout() {
               className={({ isActive }) =>
                 cn(
                   'relative flex flex-col items-center justify-center gap-1 text-[10px] font-medium transition-colors',
-                  isActive ? 'text-[#1E5C46]' : 'text-[#6E6A5E]',
+                  isActive ? 'text-[#16418F]' : 'text-[#6E6A5E]',
                 )
               }
             >

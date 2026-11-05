@@ -17,7 +17,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 43 14% 12%;
 
-    --primary: 159 50% 24%; /* #1E5C46 */
+    --primary: 216 72% 28%; /* #16418F */
     --primary-foreground: 42 43% 98%;
 
     --secondary: 42 25% 92%;
@@ -26,28 +26,28 @@
     --muted: 42 25% 92%;
     --muted-foreground: 43 8% 40%; /* #6E6A5E */
 
-    --accent: 36 79% 57%; /* #E8A33D */
-    --accent-foreground: 43 14% 12%;
+    --accent: 190 90% 38%; /* #0E8FB8 turquoise-blue */
+    --accent-foreground: 0 0% 100%;
 
     --destructive: 8 61% 48%; /* #C4452F */
     --destructive-foreground: 0 0% 100%;
 
     --border: 39 26% 87%; /* #E8E2D6 */
     --input: 39 26% 87%;
-    --ring: 36 79% 57%; /* #E8A33D */
+    --ring: 190 90% 38%; /* #0E8FB8 turquoise-blue */
 
     --radius: 1rem; /* 16px */
 
-    --sidebar-background: 147 16% 14%; /* #1E2A24 */
+    --sidebar-background: 216 55% 12%; /* #0B1B36 deep navy blue */
     --sidebar-foreground: 42 43% 96%;
-    --sidebar-primary: 36 79% 57%;
-    --sidebar-primary-foreground: 43 14% 12%;
-    --sidebar-accent: 147 16% 18%;
+    --sidebar-primary: 190 90% 38%; /* #0E8FB8 turquoise */
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 216 55% 16%; /* #12294B */
     --sidebar-accent-foreground: 42 43% 96%;
-    --sidebar-border: 147 16% 20%;
-    --sidebar-ring: 36 79% 57%;
+    --sidebar-border: 216 45% 22%;
+    --sidebar-ring: 190 90% 38%; /* #0E8FB8 turquoise */
 
-    --chart-1: 159 50% 24%; /* moradia #1E5C46 */
+    --chart-1: 216 72% 28%; /* moradia #16418F */
     --chart-2: 36 79% 57%; /* alimentacao #E8A33D */
     --chart-3: 209 46% 43%; /* transporte #3B6FA0 */
     --chart-4: 8 61% 48%; /* saude #C4452F */
@@ -163,8 +163,8 @@
   }
   .ovv-input:focus {
     outline: none;
-    border-color: #e8a33d;
-    box-shadow: 0 0 0 3px rgba(232, 163, 61, 0.35);
+    border-color: #16418f;
+    box-shadow: 0 0 0 3px rgba(22, 65, 143, 0.35);
   }
 
   .tabular-nums {

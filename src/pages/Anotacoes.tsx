@@ -164,7 +164,7 @@ export default function Anotacoes() {
         </div>
         <Button
           onClick={openCreate}
-          className="h-11 px-5 rounded-xl bg-[#1E5C46] hover:bg-[#164635] text-white font-medium text-sm active:scale-[0.98]"
+          className="h-11 px-5 rounded-xl bg-[#16418F] hover:bg-[#0F2C61] text-white font-medium text-sm active:scale-[0.98]"
         >
           <Plus className="w-4 h-4 mr-2" /> Nova anotação
         </Button>
@@ -299,7 +299,7 @@ export default function Anotacoes() {
               <Button
                 type="submit"
                 disabled={saving}
-                className="rounded-xl bg-[#1E5C46] hover:bg-[#164635] text-white"
+                className="rounded-xl bg-[#16418F] hover:bg-[#0F2C61] text-white"
               >
                 {saving ? 'Salvando...' : 'Salvar'}
               </Button>

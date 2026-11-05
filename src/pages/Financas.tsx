@@ -30,14 +30,14 @@ import { cn } from '@/lib/utils'
 
 const CATEGORY_META: Record<TransactionCategory, { label: string; color: string; emoji: string }> =
   {
-    moradia: { label: 'Moradia', color: '#1E5C46', emoji: '🏠' },
+    moradia: { label: 'Moradia', color: '#16418F', emoji: '🏠' },
     alimentacao: { label: 'Alimentação', color: '#E8A33D', emoji: '🍽️' },
     transporte: { label: 'Transporte', color: '#3B6FA0', emoji: '🚗' },
     saude: { label: 'Saúde', color: '#C4452F', emoji: '💊' },
     lazer: { label: 'Lazer', color: '#7C5CBF', emoji: '🎬' },
     educacao: { label: 'Educação', color: '#2E8B8B', emoji: '📚' },
     outros: { label: 'Outros', color: '#9B968A', emoji: '📦' },
-    salario: { label: 'Salário', color: '#2F8F5B', emoji: '💼' },
+    salario: { label: 'Salário', color: '#0E8FB8', emoji: '💼' },
   }
 
 const MONTH_NAMES = [
@@ -252,7 +252,7 @@ export default function Financas() {
         </div>
         <Button
           onClick={openCreate}
-          className="h-11 px-5 rounded-xl bg-[#1E5C46] hover:bg-[#164635] text-white font-medium text-sm active:scale-[0.98]"
+          className="h-11 px-5 rounded-xl bg-[#16418F] hover:bg-[#0F2C61] text-white font-medium text-sm active:scale-[0.98]"
         >
           <Plus className="w-4 h-4 mr-2" /> Nova transação
         </Button>
@@ -260,11 +260,11 @@ export default function Financas() {
 
       {/* Summary trio */}
       <section className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="paper-card p-5 border-t-4 border-t-[#2F8F5B]">
+        <div className="paper-card p-5 border-t-4 border-t-[#0E8FB8]">
           <div className="flex items-center gap-2 text-xs font-medium text-[#6E6A5E] mb-2">
-            <TrendingUp className="w-4 h-4 text-[#2F8F5B]" /> Receitas
+            <TrendingUp className="w-4 h-4 text-[#0E8FB8]" /> Receitas
           </div>
-          <p className="text-2xl font-bold text-[#2F8F5B] tabular-nums">
+          <p className="text-2xl font-bold text-[#0E8FB8] tabular-nums">
             <CountUp value={receitas} format={formatBRL} />
           </p>
         </div>
@@ -283,7 +283,7 @@ export default function Financas() {
           <p
             className={cn(
               'text-2xl font-bold tabular-nums',
-              saldo >= 0 ? 'text-[#2F8F5B]' : 'text-[#C4452F]',
+              saldo >= 0 ? 'text-[#0E8FB8]' : 'text-[#C4452F]',
             )}
           >
             <CountUp value={saldo} format={formatBRL} />
@@ -351,7 +351,7 @@ export default function Financas() {
         <form
           onSubmit={handleSave}
           className="space-y-4"
-          style={{ ['--accent' as string]: type === 'receita' ? '#2F8F5B' : '#C4452F' }}
+          style={{ ['--accent' as string]: type === 'receita' ? '#0E8FB8' : '#C4452F' }}
         >
           <div className="space-y-1.5">
             <Label htmlFor="tx-description" className="text-xs font-semibold text-[#23201A]">
@@ -398,7 +398,7 @@ export default function Financas() {
                     'h-10 rounded-lg text-sm font-semibold capitalize transition-all',
                     type === t
                       ? t === 'receita'
-                        ? 'bg-[#2F8F5B] text-white shadow-sm'
+                        ? 'bg-[#0E8FB8] text-white shadow-sm'
                         : 'bg-[#C4452F] text-white shadow-sm'
                       : 'text-[#6E6A5E] hover:bg-white',
                   )}
@@ -451,7 +451,7 @@ export default function Financas() {
             className={cn(
               'w-full h-11 rounded-xl text-white font-medium active:scale-[0.98]',
               type === 'receita'
-                ? 'bg-[#2F8F5B] hover:bg-[#257148]'
+                ? 'bg-[#0E8FB8] hover:bg-[#0B6F90]'
                 : 'bg-[#C4452F] hover:bg-[#A93A26]',
             )}
           >
@@ -530,7 +530,7 @@ function TxRow({
       <span
         className={cn(
           'text-sm font-bold tabular-nums shrink-0',
-          isReceita ? 'text-[#2F8F5B]' : 'text-[#C4452F]',
+          isReceita ? 'text-[#0E8FB8]' : 'text-[#C4452F]',
         )}
       >
         {isReceita ? '+' : '−'} {formatBRL(tx.amount)}

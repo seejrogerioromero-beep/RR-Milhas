@@ -58,7 +58,7 @@ export default function Login() {
         aria-hidden="true"
       />
       <div
-        className="pointer-events-none absolute w-[400px] h-[400px] rounded-full bg-[#1E5C46]/8 blur-[90px] -bottom-20 -right-20"
+        className="pointer-events-none absolute w-[400px] h-[400px] rounded-full bg-[#16418F]/8 blur-[90px] -bottom-20 -right-20"
         aria-hidden="true"
       />
 
@@ -67,11 +67,13 @@ export default function Login() {
         <div className="bg-white rounded-[20px] border border-[#E8E2D6] p-8 md:p-10 shadow-[0_8px_30px_rgb(35,32,26,0.06)] animate-fade-in-up">
           {/* Header & Logo */}
           <div className="flex flex-col items-center text-center mb-8">
-            <div className="w-14 h-14 rounded-2xl bg-[#1E2A24] flex items-center justify-center shadow-md mb-4 group transition-transform hover:scale-105">
-              <span className="font-serif text-white font-bold text-2xl tracking-wider">OVV</span>
+            <div className="w-14 h-14 rounded-2xl bg-[#0B1B36] flex items-center justify-center shadow-md mb-4 group transition-transform hover:scale-105">
+              <span className="font-serif text-white font-bold text-[15px] leading-none tracking-[0.04em]">
+                RRMILHAS
+              </span>
             </div>
             <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#FAF7F0] border border-[#E8E2D6] text-xs font-medium text-[#6E6A5E] mb-3">
-              <Lock className="w-3 h-3 text-[#1E5C46]" />
+              <Lock className="w-3 h-3 text-[#16418F]" />
               <span>Aplicativo pessoal seguro</span>
             </div>
             <h1 className="font-serif text-2xl md:text-3xl font-semibold text-[#23201A] tracking-tight">
@@ -117,7 +119,7 @@ export default function Login() {
                 </Label>
                 <Link
                   to="/forgot-password"
-                  className="text-xs font-medium text-[#1E5C46] hover:text-[#164635] hover:underline"
+                  className="text-xs font-medium text-[#16418F] hover:text-[#0F2C61] hover:underline"
                 >
                   Esqueci minha senha
                 </Link>
@@ -151,7 +153,7 @@ export default function Login() {
             <Button
               type="submit"
               disabled={isLoading}
-              className="w-full h-11 rounded-xl bg-[#1E5C46] hover:bg-[#164635] text-white font-medium text-sm shadow-sm transition-all active:scale-[0.98] mt-2 cursor-pointer"
+              className="w-full h-11 rounded-xl bg-[#16418F] hover:bg-[#0F2C61] text-white font-medium text-sm shadow-sm transition-all active:scale-[0.98] mt-2 cursor-pointer"
             >
               {isLoading ? (
                 <div className="flex items-center justify-center gap-2">
@@ -159,14 +161,14 @@ export default function Login() {
                   <span>Entrando...</span>
                 </div>
               ) : (
-                'Entrar no OVV'
+                'Entrar no RRMILHAS'
               )}
             </Button>
           </form>
 
           {/* Single-account restricted disclaimer */}
           <div className="mt-8 pt-6 border-t border-[#E8E2D6] flex items-center justify-center gap-2 text-xs text-[#6E6A5E]">
-            <ShieldCheck className="w-4 h-4 text-[#1E5C46]" />
+            <ShieldCheck className="w-4 h-4 text-[#16418F]" />
             <span>Acesso restrito ao proprietário</span>
           </div>
         </div>

@@ -61,8 +61,8 @@ export default function ForgotPassword() {
         <div className="bg-white rounded-[20px] border border-[#E8E2D6] p-8 shadow-[0_8px_30px_rgb(35,32,26,0.06)] animate-fade-in-up">
           {sent ? (
             <div className="text-center py-4">
-              <div className="w-16 h-16 rounded-full bg-[#2F8F5B]/10 flex items-center justify-center mx-auto mb-5">
-                <MailCheck className="w-8 h-8 text-[#2F8F5B]" />
+              <div className="w-16 h-16 rounded-full bg-[#0E8FB8]/10 flex items-center justify-center mx-auto mb-5">
+                <MailCheck className="w-8 h-8 text-[#0E8FB8]" />
               </div>
               <h1 className="font-serif text-2xl font-semibold text-[#23201A] mb-2">
                 Verifique seu e-mail
@@ -74,7 +74,7 @@ export default function ForgotPassword() {
               </p>
               <Button
                 onClick={() => navigate('/login')}
-                className="w-full h-11 rounded-xl bg-[#1E5C46] hover:bg-[#164635] text-white font-medium"
+                className="w-full h-11 rounded-xl bg-[#16418F] hover:bg-[#0F2C61] text-white font-medium"
               >
                 Voltar ao login
               </Button>
@@ -121,7 +121,7 @@ export default function ForgotPassword() {
                 <Button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full h-11 rounded-xl bg-[#1E5C46] hover:bg-[#164635] text-white font-medium text-sm active:scale-[0.98] mt-2"
+                  className="w-full h-11 rounded-xl bg-[#16418F] hover:bg-[#0F2C61] text-white font-medium text-sm active:scale-[0.98] mt-2"
                 >
                   {isLoading ? (
                     <div className="flex items-center justify-center gap-2">

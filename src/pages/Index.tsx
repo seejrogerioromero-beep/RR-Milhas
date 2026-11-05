@@ -25,7 +25,7 @@ import { CountUp, DonutChart } from '@/components/ovv'
 import { cn } from '@/lib/utils'
 
 const CATEGORY_COLORS: Record<string, string> = {
-  moradia: '#1E5C46',
+  moradia: '#16418F',
   alimentacao: '#E8A33D',
   transporte: '#3B6FA0',
   saude: '#C4452F',
@@ -220,8 +220,8 @@ export default function Index() {
       value: saldo,
       isCurrency: true,
       icon: Wallet,
-      color: saldo >= 0 ? 'text-[#2F8F5B]' : 'text-[#C4452F]',
-      bg: saldo >= 0 ? 'bg-[#2F8F5B]/10' : 'bg-[#C4452F]/10',
+      color: saldo >= 0 ? 'text-[#0E8FB8]' : 'text-[#C4452F]',
+      bg: saldo >= 0 ? 'bg-[#0E8FB8]/10' : 'bg-[#C4452F]/10',
     },
     {
       to: '/habitos',
@@ -305,15 +305,15 @@ export default function Index() {
             <div>
               <div className="flex justify-between text-sm mb-1.5">
                 <span className="flex items-center gap-1.5 text-[#23201A]">
-                  <TrendingUp className="w-4 h-4 text-[#2F8F5B]" /> Receitas
+                  <TrendingUp className="w-4 h-4 text-[#0E8FB8]" /> Receitas
                 </span>
-                <span className="tabular-nums font-semibold text-[#2F8F5B]">
+                <span className="tabular-nums font-semibold text-[#0E8FB8]">
                   {receitas.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                 </span>
               </div>
               <div className="h-2.5 rounded-full bg-[#E8E2D6] overflow-hidden">
                 <div
-                  className="h-full rounded-full bg-[#2F8F5B] transition-all duration-500"
+                  className="h-full rounded-full bg-[#0E8FB8] transition-all duration-500"
                   style={{
                     width: `${receitas + despesas > 0 ? (receitas / (receitas + despesas)) * 100 : 0}%`,
                   }}
@@ -348,7 +348,7 @@ export default function Index() {
           <h3 className="font-serif text-lg font-semibold text-[#23201A]">Tarefas de hoje</h3>
           <button
             onClick={() => navigate('/tarefas')}
-            className="text-xs font-medium text-[#1E5C46] hover:underline"
+            className="text-xs font-medium text-[#16418F] hover:underline"
           >
             Ver todas
           </button>
@@ -373,9 +373,9 @@ export default function Index() {
                   aria-label="Concluir tarefa"
                 >
                   {task.done ? (
-                    <CheckCircle2 className="w-5 h-5 text-[#2F8F5B]" />
+                    <CheckCircle2 className="w-5 h-5 text-[#0E8FB8]" />
                   ) : (
-                    <Circle className="w-5 h-5 text-[#9B968A] hover:text-[#1E5C46] transition-colors" />
+                    <Circle className="w-5 h-5 text-[#9B968A] hover:text-[#16418F] transition-colors" />
                   )}
                 </button>
                 <span
@@ -421,7 +421,7 @@ export default function Index() {
                     cy={36}
                     r={28}
                     fill="none"
-                    stroke={done ? '#2F8F5B' : 'transparent'}
+                    stroke={done ? '#0E8FB8' : 'transparent'}
                     strokeWidth={6}
                     strokeLinecap="round"
                     strokeDasharray={2 * Math.PI * 28}
@@ -433,7 +433,7 @@ export default function Index() {
                     {done ? '✓' : '○'}
                   </text>
                 </svg>
-                <span className="text-xs text-[#23201A] font-medium group-hover:text-[#1E5C46] transition-colors text-center max-w-[90px] truncate">
+                <span className="text-xs text-[#23201A] font-medium group-hover:text-[#16418F] transition-colors text-center max-w-[90px] truncate">
                   {habit.name}
                 </span>
               </button>
@@ -451,7 +451,7 @@ export default function Index() {
           <h3 className="font-serif text-lg font-semibold text-[#23201A]">Anotações fixadas</h3>
           <button
             onClick={() => navigate('/anotacoes')}
-            className="text-xs font-medium text-[#1E5C46] hover:underline"
+            className="text-xs font-medium text-[#16418F] hover:underline"
           >
             Ver todas
           </button>

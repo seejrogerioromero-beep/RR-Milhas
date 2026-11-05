@@ -154,7 +154,7 @@ export function BarChart({ data }: { data: { label: string; value: number }[] })
             <div
               className={cn(
                 'w-full rounded-t-md transition-all duration-500',
-                d.value >= 0 ? 'bg-[#2F8F5B]' : 'bg-[#C4452F]',
+                d.value >= 0 ? 'bg-[#0E8FB8]' : 'bg-[#C4452F]',
               )}
               style={{ height: `${height}%` }}
               title={`${d.label}: ${d.value.toFixed(2)}`}

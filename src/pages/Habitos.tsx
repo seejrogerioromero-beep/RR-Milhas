@@ -217,7 +217,7 @@ export default function Habitos() {
         <h1 className="font-serif text-2xl font-semibold text-[#23201A]">Hábitos</h1>
         <Button
           onClick={openCreate}
-          className="h-11 px-5 rounded-xl bg-[#1E5C46] hover:bg-[#164635] text-white font-medium text-sm active:scale-[0.98]"
+          className="h-11 px-5 rounded-xl bg-[#16418F] hover:bg-[#0F2C61] text-white font-medium text-sm active:scale-[0.98]"
         >
           <Plus className="w-4 h-4 mr-2" /> Novo hábito
         </Button>
@@ -364,7 +364,7 @@ export default function Habitos() {
                     className={cn(
                       'grid place-items-center h-10 rounded-xl text-lg transition-all',
                       icon === ic
-                        ? 'bg-[#1E5C46]/10 border-2 border-[#1E5C46]'
+                        ? 'bg-[#16418F]/10 border-2 border-[#16418F]'
                         : 'bg-[#FAF7F0] border border-[#E8E2D6] hover:bg-white',
                     )}
                   >
@@ -407,7 +407,7 @@ export default function Habitos() {
               <Button
                 type="submit"
                 disabled={saving}
-                className="rounded-xl bg-[#1E5C46] hover:bg-[#164635] text-white"
+                className="rounded-xl bg-[#16418F] hover:bg-[#0F2C61] text-white"
               >
                 {saving ? 'Salvando...' : 'Criar hábito'}
               </Button>

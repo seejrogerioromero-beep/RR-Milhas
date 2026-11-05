@@ -10,8 +10,10 @@ export const RequireAuth: React.FC<{ children: React.ReactNode }> = ({ children 
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#FAF7F0]">
         <div className="flex flex-col items-center gap-3">
-          <div className="w-8 h-8 rounded-full border-2 border-[#1E5C46] border-t-transparent animate-spin" />
-          <span className="font-serif text-[#23201A] text-sm tracking-wide">Carregando OVV...</span>
+          <div className="w-8 h-8 rounded-full border-2 border-[#16418F] border-t-transparent animate-spin" />
+          <span className="font-serif text-[#23201A] text-sm tracking-wide">
+            Carregando RRMILHAS...
+          </span>
         </div>
       </div>
     )

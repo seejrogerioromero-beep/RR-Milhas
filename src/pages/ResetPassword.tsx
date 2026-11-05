@@ -69,7 +69,7 @@ export default function ResetPassword() {
   return (
     <div className="min-h-screen bg-[#FAF7F0] flex items-center justify-center px-4 relative overflow-hidden">
       <div
-        className="pointer-events-none absolute w-[400px] h-[400px] rounded-full bg-[#1E5C46]/10 blur-[100px] -bottom-16 -left-16"
+        className="pointer-events-none absolute w-[400px] h-[400px] rounded-full bg-[#16418F]/10 blur-[100px] -bottom-16 -left-16"
         aria-hidden="true"
       />
 
@@ -85,7 +85,7 @@ export default function ResetPassword() {
         <div className="bg-white rounded-[20px] border border-[#E8E2D6] p-8 shadow-[0_8px_30px_rgb(35,32,26,0.06)] animate-fade-in-up">
           <div className="mb-7">
             <div className="w-12 h-12 rounded-xl bg-[#FAF7F0] border border-[#E8E2D6] flex items-center justify-center mb-3">
-              <KeyRound className="w-6 h-6 text-[#1E5C46]" />
+              <KeyRound className="w-6 h-6 text-[#16418F]" />
             </div>
             <h1 className="font-serif text-2xl font-semibold text-[#23201A] mb-1.5">
               Redefinir senha
@@ -155,7 +155,7 @@ export default function ResetPassword() {
               <div className="flex items-center gap-1.5">
                 <CheckCircle2
                   className={`w-3.5 h-3.5 ${
-                    password.length >= 8 ? 'text-[#2F8F5B]' : 'text-[#9B968A]'
+                    password.length >= 8 ? 'text-[#0E8FB8]' : 'text-[#9B968A]'
                   }`}
                 />
                 <span>Mínimo de 8 caracteres</span>
@@ -165,7 +165,7 @@ export default function ResetPassword() {
             <Button
               type="submit"
               disabled={isLoading}
-              className="w-full h-11 rounded-xl bg-[#1E5C46] hover:bg-[#164635] text-white font-medium text-sm active:scale-[0.98] mt-2"
+              className="w-full h-11 rounded-xl bg-[#16418F] hover:bg-[#0F2C61] text-white font-medium text-sm active:scale-[0.98] mt-2"
             >
               {isLoading ? (
                 <div className="flex items-center justify-center gap-2">

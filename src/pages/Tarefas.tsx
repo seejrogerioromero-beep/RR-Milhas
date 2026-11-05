@@ -237,7 +237,7 @@ export default function Tarefas() {
         </div>
         <Button
           onClick={openCreate}
-          className="h-11 px-5 rounded-xl bg-[#1E5C46] hover:bg-[#164635] text-white font-medium text-sm active:scale-[0.98]"
+          className="h-11 px-5 rounded-xl bg-[#16418F] hover:bg-[#0F2C61] text-white font-medium text-sm active:scale-[0.98]"
         >
           <Plus className="w-4 h-4 mr-2" /> Nova tarefa
         </Button>
@@ -251,12 +251,12 @@ export default function Tarefas() {
             onClick={() => handleFilterChange(f)}
             className={cn(
               'relative px-4 py-2.5 text-sm font-medium capitalize transition-colors whitespace-nowrap',
-              filter === f ? 'text-[#1E5C46]' : 'text-[#6E6A5E] hover:text-[#23201A]',
+              filter === f ? 'text-[#16418F]' : 'text-[#6E6A5E] hover:text-[#23201A]',
             )}
           >
             {f === 'hoje' ? 'Hoje' : f.charAt(0).toUpperCase() + f.slice(1)}
             {filter === f && (
-              <span className="absolute bottom-0 left-0 right-0 h-[3px] rounded-full bg-[#1E5C46] animate-fade-in" />
+              <span className="absolute bottom-0 left-0 right-0 h-[3px] rounded-full bg-[#16418F] animate-fade-in" />
             )}
           </button>
         ))}
@@ -387,7 +387,7 @@ export default function Tarefas() {
           <Button
             type="submit"
             disabled={saving}
-            className="w-full h-11 rounded-xl bg-[#1E5C46] hover:bg-[#164635] text-white font-medium active:scale-[0.98]"
+            className="w-full h-11 rounded-xl bg-[#16418F] hover:bg-[#0F2C61] text-white font-medium active:scale-[0.98]"
           >
             {saving ? 'Salvando...' : editing ? 'Salvar alterações' : 'Criar tarefa'}
           </Button>
@@ -449,9 +449,9 @@ function TaskRow({
     >
       <button onClick={onToggle} className="shrink-0" aria-label="Marcar como concluída">
         {task.done ? (
-          <CheckCircle2 className="w-5 h-5 text-[#2F8F5B]" />
+          <CheckCircle2 className="w-5 h-5 text-[#0E8FB8]" />
         ) : (
-          <Circle className="w-5 h-5 text-[#9B968A] group-hover:text-[#1E5C46] transition-colors" />
+          <Circle className="w-5 h-5 text-[#9B968A] group-hover:text-[#16418F] transition-colors" />
         )}
       </button>
 

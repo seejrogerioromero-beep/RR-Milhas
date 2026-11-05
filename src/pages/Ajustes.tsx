@@ -150,7 +150,7 @@ export default function Ajustes() {
       {/* Profile card */}
       <section className="paper-card p-6">
         <div className="flex items-center gap-2 mb-5">
-          <User className="w-4 h-4 text-[#1E5C46]" />
+          <User className="w-4 h-4 text-[#16418F]" />
           <h2 className="font-serif text-lg font-semibold text-[#23201A]">Perfil</h2>
         </div>
 
@@ -162,7 +162,7 @@ export default function Ajustes() {
                 {avatarSrc ? (
                   <img src={avatarSrc} alt="Avatar" className="w-full h-full object-cover" />
                 ) : (
-                  <span className="font-serif text-2xl font-semibold text-[#1E5C46]">
+                  <span className="font-serif text-2xl font-semibold text-[#16418F]">
                     {userInitial}
                   </span>
                 )}
@@ -170,7 +170,7 @@ export default function Ajustes() {
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="absolute -bottom-1 -right-1 grid place-items-center w-8 h-8 rounded-full bg-[#1E5C46] text-white shadow-md hover:bg-[#164635] transition-colors"
+                className="absolute -bottom-1 -right-1 grid place-items-center w-8 h-8 rounded-full bg-[#16418F] text-white shadow-md hover:bg-[#0F2C61] transition-colors"
                 aria-label="Alterar foto"
               >
                 <Camera className="w-4 h-4" />
@@ -228,7 +228,7 @@ export default function Ajustes() {
               <Lock className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9B968A]" />
             </div>
             <p className="text-[11px] text-[#6E6A5E] flex items-center gap-1.5 mt-1">
-              <ShieldCheck className="w-3.5 h-3.5 text-[#1E5C46]" />
+              <ShieldCheck className="w-3.5 h-3.5 text-[#16418F]" />
               Conta única — acesso restrito
             </p>
           </div>
@@ -236,7 +236,7 @@ export default function Ajustes() {
           <Button
             type="submit"
             disabled={savingProfile}
-            className="rounded-xl bg-[#1E5C46] hover:bg-[#164635] text-white font-medium active:scale-[0.98]"
+            className="rounded-xl bg-[#16418F] hover:bg-[#0F2C61] text-white font-medium active:scale-[0.98]"
           >
             {savingProfile ? (
               <>
@@ -254,7 +254,7 @@ export default function Ajustes() {
       {/* Security */}
       <section className="paper-card p-6">
         <div className="flex items-center gap-2 mb-5">
-          <KeyRound className="w-4 h-4 text-[#1E5C46]" />
+          <KeyRound className="w-4 h-4 text-[#16418F]" />
           <h2 className="font-serif text-lg font-semibold text-[#23201A]">Segurança</h2>
         </div>
 
@@ -310,7 +310,7 @@ export default function Ajustes() {
           <Button
             type="submit"
             disabled={savingPw}
-            className="rounded-xl bg-[#1E5C46] hover:bg-[#164635] text-white font-medium"
+            className="rounded-xl bg-[#16418F] hover:bg-[#0F2C61] text-white font-medium"
           >
             {savingPw ? 'Alterando...' : 'Alterar senha'}
           </Button>
@@ -325,7 +325,7 @@ export default function Ajustes() {
           </button>
           <p className="text-xs text-[#6E6A5E]">
             Esqueceu a senha?{' '}
-            <Link to="/forgot-password" className="text-[#1E5C46] font-medium hover:underline">
+            <Link to="/forgot-password" className="text-[#16418F] font-medium hover:underline">
               Recuperar acesso
             </Link>
           </p>
@@ -335,8 +335,8 @@ export default function Ajustes() {
       {/* App info */}
       <section className="paper-card p-6">
         <div className="flex items-center gap-2 mb-4">
-          <Info className="w-4 h-4 text-[#1E5C46]" />
-          <h2 className="font-serif text-lg font-semibold text-[#23201A]">Sobre o aplicativo</h2>
+          <Info className="w-4 h-4 text-[#16418F]" />
+          <h2 className="font-serif text-lg font-semibold text-[#23201A]">Sobre o RRMILHAS</h2>
         </div>
         <dl className="space-y-3 text-sm">
           <div className="flex justify-between">
