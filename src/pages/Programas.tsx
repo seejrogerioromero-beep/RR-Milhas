@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback, useMemo } from 'react'
-import { Plus, Coins, Pencil, Trash2, TrendingUp } from 'lucide-react'
+import { useState, useEffect, useCallback } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
+import { Plus, Coins, Pencil, Trash2, TrendingUp, ArrowRight } from 'lucide-react'
 import { PageContainer as Layout } from '@/components/Layout'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -14,11 +15,17 @@ import { cn } from '@/lib/utils'
 
 export default function Programas() {
   const { toast } = useToast()
+  const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
   const [programs, setPrograms] = useState<ProgramRecord[]>([])
   const [loading, setLoading] = useState(true)
   const [sheetOpen, setSheetOpen] = useState(false)
   const [editingProgram, setEditingProgram] = useState<ProgramRecord | null>(null)
-  const [selectedId, setSelectedId] = useState<string | null>(null)
+  const selectedId = searchParams.get('acessar') // ?acessar=<id> abre o extrato inline
+  const setSelectedId = (id: string | null) => {
+    if (id) setSearchParams({ acessar: id }, { replace: true })
+    else setSearchParams({}, { replace: true })
+  }
   const [deleteId, setDeleteId] = useState<string | null>(null)
 
   const reload = useCallback(async () => {
@@ -38,10 +45,7 @@ export default function Programas() {
 
   useRealtime<ProgramRecord>('programs', () => reload())
 
-  const selected = useMemo(
-    () => programs.find((p) => p.id === selectedId) || null,
-    [programs, selectedId],
-  )
+  const selected = programs.find((p) => p.id === selectedId) || null
 
   const handleDelete = async () => {
     if (!deleteId) return
@@ -116,13 +120,23 @@ export default function Programas() {
                     'paper-card-interactive p-5 cursor-pointer relative',
                     selectedId === p.id && 'ring-2 ring-[#16418F]/60',
                   )}
-                  onClick={() => setSelectedId(p.id)}
+                  onClick={() => navigate(`/programas?acessar=${p.id}`)}
                 >
                   <div className="flex items-start justify-between">
                     <span className="flex items-center gap-2 text-sm font-semibold text-[#23201A]">
                       <Coins className="w-4 h-4 text-[#0E8FB8]" /> {p.name}
                     </span>
                     <span className="flex items-center gap-1">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setSelectedId(p.id)
+                        }}
+                        className="flex items-center gap-1.5 h-7 px-2.5 rounded-lg text-xs font-semibold bg-[#16418F]/10 text-[#16418F] hover:bg-[#16418F]/20 transition-colors"
+                        aria-label={`Acessar ${p.name}`}
+                      >
+                        Acessar <ArrowRight className="w-3.5 h-3.5" />
+                      </button>
                       <button
                         onClick={(e) => {
                           e.stopPropagation()
@@ -187,14 +201,16 @@ export default function Programas() {
           }}
           onSuccess={() => reload()}
         />
-        <ConfirmDelete
-          title="Excluir programa"
-          description={
-            <>O programa e todo o seu extrato serão removidos. Essa ação não pode ser desfeita.</>
-          }
-          onConfirm={handleDelete}
-          onCancel={() => setDeleteId(null)}
-        />
+        {deleteId && (
+          <ConfirmDelete
+            title="Excluir programa"
+            description={
+              <>O programa e todo o seu extrato serão removidos. Essa ação não pode ser desfeita.</>
+            }
+            onConfirm={handleDelete}
+            onCancel={() => setDeleteId(null)}
+          />
+        )}
       </div>
     </Layout>
   )

@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { Toaster } from '@/components/ui/toaster'
 import { Toaster as Sonner } from '@/components/ui/sonner'
 import { TooltipProvider } from '@/components/ui/tooltip'
@@ -9,6 +9,11 @@ import Inicio from './pages/Inicio'
 import Programas from './pages/Programas'
 import Passagens from './pages/Passagens'
 import Hoteis from './pages/Hoteis'
+import Lancamentos from './pages/Lancamentos'
+
+import Passageiros from './pages/Passageiros'
+import Calculadoras from './pages/Calculadoras'
+import SalasVip from './pages/SalasVip'
 import Ajustes from './pages/Ajustes'
 import Login from './pages/Login'
 import ForgotPassword from './pages/ForgotPassword'
@@ -40,8 +45,14 @@ const App = () => (
           >
             <Route path="/" element={<Inicio />} />
             <Route path="/milhas" element={<Programas />} />
+            <Route path="/programas" element={<Programas />} />
+
             <Route path="/passagens" element={<Passagens />} />
             <Route path="/hoteis" element={<Hoteis />} />
+            <Route path="/lancamentos" element={<Lancamentos />} />
+            <Route path="/passageiros" element={<Passageiros />} />
+            <Route path="/calculadoras" element={<Calculadoras />} />
+            <Route path="/salas-vip" element={<SalasVip />} />
             <Route path="/ajustes" element={<Ajustes />} />
           </Route>
 
