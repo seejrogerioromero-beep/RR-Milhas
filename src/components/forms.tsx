@@ -17,6 +17,7 @@ import pb from '@/lib/pocketbase/client'
 import { extractFieldErrors } from '@/lib/pocketbase/errors'
 import type { ProgramRecord } from '@/types/database'
 import { maskBRL, parseNumberInput, formatBRL } from '@/lib/miles'
+import { PREDEFINED_PROGRAMS, isForbiddenProgramName } from '@/lib/programCatalog'
 import { cn } from '@/lib/utils'
 
 /** Confirmação de exclusão genérica do RRMILHAS. */
@@ -54,32 +55,88 @@ export function ConfirmDelete({
   )
 }
 
-/** Formulário (em Sheet) de novo programa de milhas. */
-export function ProgramFormSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
+/** Formulário (em Sheet) de cadastro e edição de programa de milhas. */
+export function ProgramFormSheet({
+  open,
+  onClose,
+  initialProgram,
+  onSuccess,
+}: {
+  open: boolean
+  onClose: () => void
+  initialProgram?: ProgramRecord | null
+  onSuccess?: () => void
+}) {
   const { toast } = useToast()
-  const [name, setName] = useState('')
+  const isEditing = Boolean(initialProgram?.id)
+
+  const [selectedCatalogId, setSelectedCatalogId] = useState('')
+  const [customName, setCustomName] = useState('')
   const [balance, setBalance] = useState('')
   const [costPerThousand, setCostPerThousand] = useState('')
   const [marketPerThousand, setMarketPerThousand] = useState('')
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [saving, setSaving] = useState(false)
 
-  const reset = () => {
-    setName('')
-    setBalance('')
-    setCostPerThousand('')
-    setMarketPerThousand('')
+  // Atualiza os campos sempre que initialProgram mudar ou o Sheet abrir
+  React.useEffect(() => {
+    if (initialProgram) {
+      const match = PREDEFINED_PROGRAMS.find(
+        (p) => p.name.toLowerCase() === initialProgram.name.trim().toLowerCase(),
+      )
+      if (match) {
+        setSelectedCatalogId(match.id)
+        setCustomName('')
+      } else {
+        setSelectedCatalogId('outro')
+        setCustomName(initialProgram.name)
+      }
+      setBalance(String(initialProgram.balance ?? 0))
+      setCostPerThousand(
+        initialProgram.cost_per_thousand != null
+          ? initialProgram.cost_per_thousand.toFixed(2).replace('.', ',')
+          : '',
+      )
+      setMarketPerThousand(
+        initialProgram.market_per_thousand != null
+          ? initialProgram.market_per_thousand.toFixed(2).replace('.', ',')
+          : '',
+      )
+    } else {
+      setSelectedCatalogId('')
+      setCustomName('')
+      setBalance('')
+      setCostPerThousand('')
+      setMarketPerThousand('')
+    }
     setErrors({})
-  }
+  }, [initialProgram, open])
+
+  const effectiveProgramName = React.useMemo(() => {
+    if (selectedCatalogId === 'outro') {
+      return customName.trim()
+    }
+    const found = PREDEFINED_PROGRAMS.find((p) => p.id === selectedCatalogId)
+    return found ? found.name : ''
+  }, [selectedCatalogId, customName])
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault()
     const errs: Record<string, string> = {}
-    if (!name.trim()) errs.name = 'Nome do programa é obrigatório'
+
+    if (!selectedCatalogId) {
+      errs.catalog = 'Selecione um programa da lista'
+    } else if (selectedCatalogId === 'outro' && !customName.trim()) {
+      errs.name = 'Digite o nome do programa'
+    } else if (isForbiddenProgramName(effectiveProgramName)) {
+      errs.name = 'Este programa não é suportado pelo RRMILHAS.'
+    }
+
     const bal = parseNumberInput(balance)
     if (bal == null || bal < 0) errs.balance = 'Informe o saldo atual de milhas'
     const cost = parseNumberInput(costPerThousand)
     if (cost == null || cost < 0) errs.cost_per_thousand = 'Informe o custo do milheiro'
+
     if (Object.keys(errs).length > 0) {
       setErrors(errs)
       return
@@ -87,17 +144,27 @@ export function ProgramFormSheet({ open, onClose }: { open: boolean; onClose: ()
 
     setSaving(true)
     try {
-      await pb.collection('programs').create({
-        name: name.trim(),
+      const data = {
+        name: effectiveProgramName,
         balance: bal,
         cost_per_thousand: cost,
         market_per_thousand: parseNumberInput(marketPerThousand) || 0,
-      })
-      toast({
-        title: 'Programa cadastrado',
-        description: `${name.trim()} já aparece na sua lista.`,
-      })
-      reset()
+      }
+
+      if (isEditing && initialProgram?.id) {
+        await pb.collection('programs').update(initialProgram.id, data)
+        toast({
+          title: 'Programa atualizado',
+          description: `${effectiveProgramName} foi salvo com sucesso.`,
+        })
+      } else {
+        await pb.collection('programs').create(data)
+        toast({
+          title: 'Programa cadastrado',
+          description: `${effectiveProgramName} já aparece na sua lista.`,
+        })
+      }
+      onSuccess?.()
       onClose()
     } catch (err) {
       setErrors(extractFieldErrors(err))
@@ -106,23 +173,90 @@ export function ProgramFormSheet({ open, onClose }: { open: boolean; onClose: ()
     }
   }
 
+  // Agrupa os programas pré-definidos por categoria
+  const aereas = PREDEFINED_PROGRAMS.filter((p) => p.category === 'aerea')
+  const bancos = PREDEFINED_PROGRAMS.filter((p) => p.category === 'banco')
+  const hoteis = PREDEFINED_PROGRAMS.filter((p) => p.category === 'hotel')
+
   return (
-    <Sheet open={open} onClose={onClose} title="Novo programa de milhas">
+    <Sheet
+      open={open}
+      onClose={onClose}
+      title={isEditing ? 'Editar programa de milhas' : 'Novo programa de milhas'}
+    >
       <form onSubmit={handleSave} className="space-y-4">
+        {/* Seleção do Programa em Lista Pré-definida */}
         <div className="space-y-1.5">
-          <Label htmlFor="program-name" className="text-xs font-semibold text-[#23201A]">
-            Nome do programa *
+          <Label htmlFor="program-select" className="text-xs font-semibold text-[#23201A]">
+            Programa de fidelidade *
           </Label>
-          <Input
-            id="program-name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            maxLength={80}
-            placeholder="Ex: Smiles, LATAM Pass, Azul Fidelidade"
-            className={cn('rrmilhas-input', errors.name && 'border-[#C4452F]')}
-          />
-          {errors.name && <p className="text-xs text-[#C4452F]">{errors.name}</p>}
+          <select
+            id="program-select"
+            value={selectedCatalogId}
+            onChange={(e) => {
+              setSelectedCatalogId(e.target.value)
+              if (e.target.value !== 'outro') {
+                setCustomName('')
+              }
+              setErrors((prev) => ({ ...prev, catalog: '', name: '' }))
+            }}
+            className={cn(
+              'rrmilhas-input w-full bg-white cursor-pointer py-2 px-3',
+              errors.catalog && 'border-[#C4452F]',
+            )}
+          >
+            <option value="" disabled>
+              Escolha o programa
+            </option>
+            <optgroup label="✈️ Companhias Aéreas">
+              {aereas.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
+            </optgroup>
+            <optgroup label="🏦 Bancos e Financeiras">
+              {bancos.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
+            </optgroup>
+            <optgroup label="🏨 Redes de Hotéis">
+              {hoteis.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
+            </optgroup>
+            <optgroup label="➕ Outro">
+              <option value="outro">Outro programa (digitar nome)...</option>
+            </optgroup>
+          </select>
+          {errors.catalog && <p className="text-xs text-[#C4452F]">{errors.catalog}</p>}
         </div>
+
+        {/* Campo livre exibido apenas se selecionou 'Outro' */}
+        {selectedCatalogId === 'outro' && (
+          <div className="space-y-1.5 animate-fadeIn">
+            <Label htmlFor="program-custom-name" className="text-xs font-semibold text-[#23201A]">
+              Nome do programa *
+            </Label>
+            <Input
+              id="program-custom-name"
+              value={customName}
+              onChange={(e) => {
+                setCustomName(e.target.value)
+                setErrors((prev) => ({ ...prev, name: '' }))
+              }}
+              maxLength={80}
+              placeholder="Digite o nome do programa"
+              className={cn('rrmilhas-input', errors.name && 'border-[#C4452F]')}
+              autoFocus
+            />
+            {errors.name && <p className="text-xs text-[#C4452F]">{errors.name}</p>}
+          </div>
+        )}
 
         <div className="space-y-1.5">
           <Label htmlFor="program-balance" className="text-xs font-semibold text-[#23201A]">
@@ -151,7 +285,7 @@ export function ProgramFormSheet({ open, onClose }: { open: boolean; onClose: ()
               onChange={(e) => setCostPerThousand(maskBRL(e.target.value))}
               placeholder="Ex: 64,70"
               className={cn(
-                'ovv-input tabular-nums',
+                'rrmilhas-input tabular-nums',
                 errors.cost_per_thousand && 'border-[#C4452F]',
               )}
             />
@@ -179,7 +313,7 @@ export function ProgramFormSheet({ open, onClose }: { open: boolean; onClose: ()
           disabled={saving}
           className="w-full h-11 rounded-xl bg-[#16418F] hover:bg-[#0F2C61] text-white font-medium active:scale-[0.98]"
         >
-          {saving ? 'Salvando...' : 'Cadastrar programa'}
+          {saving ? 'Salvando...' : isEditing ? 'Salvar alterações' : 'Cadastrar programa'}
         </Button>
       </form>
     </Sheet>

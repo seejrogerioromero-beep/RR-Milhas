@@ -17,6 +17,7 @@ export default function Programas() {
   const [programs, setPrograms] = useState<ProgramRecord[]>([])
   const [loading, setLoading] = useState(true)
   const [sheetOpen, setSheetOpen] = useState(false)
+  const [editingProgram, setEditingProgram] = useState<ProgramRecord | null>(null)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [deleteId, setDeleteId] = useState<string | null>(null)
 
@@ -71,7 +72,10 @@ export default function Programas() {
             </p>
           </div>
           <Button
-            onClick={() => setSheetOpen(true)}
+            onClick={() => {
+              setEditingProgram(null)
+              setSheetOpen(true)
+            }}
             className="rounded-xl bg-[#16418F] hover:bg-[#0F2C61] text-white font-medium"
           >
             <Plus className="w-4 h-4 mr-1.5" /> Novo programa
@@ -93,7 +97,10 @@ export default function Programas() {
               médio sempre atualizados.
             </p>
             <Button
-              onClick={() => setSheetOpen(true)}
+              onClick={() => {
+                setEditingProgram(null)
+                setSheetOpen(true)
+              }}
               className="mt-5 rounded-xl bg-[#16418F] hover:bg-[#0F2C61] text-white"
             >
               <Plus className="w-4 h-4 mr-1.5" /> Novo programa
@@ -119,7 +126,8 @@ export default function Programas() {
                       <button
                         onClick={(e) => {
                           e.stopPropagation()
-                          // TODO: edição de programa — mesma Sheet em modo edição
+                          setEditingProgram(p)
+                          setSheetOpen(true)
                         }}
                         className="grid place-items-center w-7 h-7 rounded-lg hover:bg-[#FAF7F0] text-[#6E6A5E]"
                         aria-label={`Editar ${p.name}`}
@@ -170,7 +178,15 @@ export default function Programas() {
           </>
         )}
 
-        <ProgramFormSheet open={sheetOpen} onClose={() => setSheetOpen(false)} />
+        <ProgramFormSheet
+          open={sheetOpen}
+          initialProgram={editingProgram}
+          onClose={() => {
+            setSheetOpen(false)
+            setEditingProgram(null)
+          }}
+          onSuccess={() => reload()}
+        />
         <ConfirmDelete
           title="Excluir programa"
           description={
