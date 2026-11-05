@@ -6,6 +6,23 @@
 onRecordAuthRequest((e) => {
   const OWNER_EMAIL = 'seej.rogerio.romero@gmail.com'
 
+  // Corpo malformado (identity que não é string: undefined, null, objeto, número)
+  // recebe 400 de autenticação padrão, sem lançar TypeError no hook.
+  let info = null
+  try {
+    info = e.requestInfo ? e.requestInfo() : null
+  } catch (err) {
+    info = null
+  }
+  if (
+    info &&
+    info.body &&
+    info.body.identity !== undefined &&
+    typeof info.body.identity !== 'string'
+  ) {
+    throw new BadRequestError('Failed to authenticate.')
+  }
+
   let ownerId = ''
   try {
     const owner = $app.findAuthRecordByEmail('users', OWNER_EMAIL)
