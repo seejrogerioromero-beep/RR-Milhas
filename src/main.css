@@ -154,14 +154,14 @@
     box-shadow: 0 8px 24px rgba(35, 32, 26, 0.1);
   }
 
-  /* Form input & button styling */
-  .ovv-input {
+  /* Form input styling */
+  .rrmilhas-input {
     border-radius: 12px;
     border: 1px solid #e8e2d6;
     background-color: #faf7f0;
     transition: all 180ms ease;
   }
-  .ovv-input:focus {
+  .rrmilhas-input:focus {
     outline: none;
     border-color: #16418f;
     box-shadow: 0 0 0 3px rgba(22, 65, 143, 0.35);

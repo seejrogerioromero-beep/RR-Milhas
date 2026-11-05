@@ -1,0 +1,280 @@
+import { useState, useEffect, useCallback } from 'react'
+import { Link } from 'react-router-dom'
+import { Plane, Hotel, ArrowUpRight, Sparkles, Coins } from 'lucide-react'
+import { PageContainer as Layout } from '@/components/Layout'
+import { Card } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import pb from '@/lib/pocketbase/client'
+import { useRealtime } from '@/hooks/use-realtime'
+import { useAuth } from '@/contexts/AuthContext'
+import type { ProgramRecord, FlightRecord, HotelRecord, ProgramEntryRecord } from '@/types/database'
+import { formatMiles, formatBRL, formatDateBR, formatDateTimeBR } from '@/lib/miles'
+import { ProgramFormSheet, FlightFormSheet, HotelFormSheet } from '@/components/forms'
+import { cn } from '@/lib/utils'
+
+export default function Inicio() {
+  const { user } = useAuth()
+  const firstName = (user?.name || '').split(' ')[0] || 'Rogério'
+
+  const [programs, setPrograms] = useState<ProgramRecord[]>([])
+  const [flights, setFlights] = useState<FlightRecord[]>([])
+  const [hotels, setHotels] = useState<HotelRecord[]>([])
+  const [loading, setLoading] = useState(true)
+
+  const [programSheet, setProgramSheet] = useState(false)
+  const [flightSheet, setFlightSheet] = useState(false)
+  const [hotelSheet, setHotelSheet] = useState(false)
+
+  const reload = useCallback(async () => {
+    try {
+      const [p, f, h] = await Promise.all([
+        pb.collection('programs').getFullList({ sort: 'name' }),
+        pb.collection('flights').getFullList({ sort: '-departure' }),
+        pb.collection('hotels').getFullList({ sort: '-check_out' }),
+      ])
+      setPrograms(p as unknown as ProgramRecord[])
+      setFlights(f as unknown as FlightRecord[])
+      setHotels(h as unknown as HotelRecord[])
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    reload()
+  }, [reload])
+
+  useRealtime<ProgramRecord>('programs', () => reload())
+  useRealtime<FlightRecord>('flights', () => reload())
+  useRealtime<HotelRecord>('hotels', () => reload())
+  useRealtime<ProgramEntryRecord>('program_entries', () => reload())
+
+  const now = Date.now()
+  const upcomingFlights = flights
+    .filter((f) => new Date(f.departure).getTime() >= now - 12 * 3600 * 1000)
+    .sort((a, b) => a.departure.localeCompare(b.departure))
+    .slice(0, 3)
+  const upcomingHotels = hotels
+    .filter((h) => new Date(h.check_out).getTime() >= now)
+    .sort((a, b) => a.check_out.localeCompare(b.check_out))
+    .slice(0, 3)
+
+  return (
+    <Layout>
+      <div className="fade-rise space-y-6 max-w-5xl">
+        <div>
+          <p className="text-xs font-bold uppercase tracking-widest text-[#0E8FB8]">Início</p>
+          <h1 className="font-serif text-3xl font-bold text-[#23201A] mt-1">Olá, {firstName}</h1>
+          <p className="text-sm text-[#6E6A5E] mt-2">
+            Seus saldos de milhas e as próximas passagens e hospedagens.
+          </p>
+        </div>
+
+        {/* MILHAS */}
+        <Card className="paper-card p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-widest text-[#0E8FB8]">
+                Milhas
+              </p>
+              <h2 className="font-serif text-xl font-semibold text-[#23201A]">Seus programas</h2>
+            </div>
+            {programs.length > 0 && (
+              <Link
+                to="/milhas"
+                className="text-sm font-semibold text-[#16418F] hover:text-[#0E8FB8] flex items-center gap-0.5"
+              >
+                Ver todos <ArrowUpRight className="w-4 h-4" />
+              </Link>
+            )}
+          </div>
+          {loading ? (
+            <p className="text-sm text-[#6E6A5E] py-4">Carregando...</p>
+          ) : programs.length === 0 ? (
+            <div className="rounded-xl border border-dashed border-[#E8E2D6] bg-white py-8 text-center">
+              <p className="text-sm text-[#6E6A5E]">
+                Você ainda não cadastrou nenhum programa de milhas.
+              </p>
+              <Button
+                onClick={() => setProgramSheet(true)}
+                className="mt-3 rounded-xl bg-[#16418F] hover:bg-[#0F2C61] text-white"
+              >
+                Cadastrar programa
+              </Button>
+            </div>
+          ) : (
+            <div className="grid sm:grid-cols-2 gap-3">
+              {programs.map((p) => (
+                <Link
+                  key={p.id}
+                  to="/milhas"
+                  className="rounded-xl border border-[#E8E2D6] bg-[#FAF7F0]/60 p-4 hover:border-[#16418F]/40 transition-colors"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="flex items-center gap-2 text-sm font-semibold text-[#23201A]">
+                      <Coins className="w-4 h-4 text-[#0E8FB8]" /> {p.name}
+                    </span>
+                    <span className="text-xs text-[#6E6A5E]">
+                      {formatBRL(p.cost_per_thousand || 0)}/milheiro
+                    </span>
+                  </div>
+                  <p className="font-serif text-2xl font-bold text-[#16418F] tabular-nums mt-2">
+                    {formatMiles(p.balance || 0)}
+                    <span className="text-sm font-normal text-[#6E6A5E]"> milhas</span>
+                  </p>
+                </Link>
+              ))}
+            </div>
+          )}
+        </Card>
+
+        {/* VOOS + HOTÉIS */}
+        <div className="grid md:grid-cols-2 gap-6">
+          <Card className="paper-card p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-widest text-[#0E8FB8]">
+                  Voos
+                </p>
+                <h2 className="font-serif text-xl font-semibold text-[#23201A]">
+                  Próximas passagens
+                </h2>
+              </div>
+              {upcomingFlights.length > 0 && (
+                <Link
+                  to="/passagens"
+                  className="text-sm font-semibold text-[#16418F] hover:text-[#0E8FB8] flex items-center gap-0.5"
+                >
+                  Ver todas <ArrowUpRight className="w-4 h-4" />
+                </Link>
+              )}
+            </div>
+            {upcomingFlights.length === 0 ? (
+              <div className="rounded-xl border border-dashed border-[#E8E2D6] bg-white py-8 text-center">
+                <p className="text-sm text-[#6E6A5E]">
+                  Nenhuma passagem com embarque daqui para frente.
+                </p>
+                <Button
+                  onClick={() => setFlightSheet(true)}
+                  className="mt-3 rounded-xl bg-[#16418F] hover:bg-[#0F2C61] text-white"
+                >
+                  Registrar passagem
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {upcomingFlights.map((f) => (
+                  <Link
+                    key={f.id}
+                    to="/passagens"
+                    className="block rounded-xl border border-[#E8E2D6] bg-[#FAF7F0]/60 p-4 hover:border-[#16418F]/40 transition-colors"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="flex items-center gap-2 text-sm font-semibold text-[#23201A]">
+                        <Plane className="w-4 h-4 text-[#0E8FB8]" /> {f.route}
+                      </span>
+                      <span
+                        className={cn(
+                          'text-[11px] font-semibold px-2 py-0.5 rounded-full',
+                          f.payment_method === 'milhas'
+                            ? 'bg-[#0E8FB8]/10 text-[#0E8FB8]'
+                            : 'bg-[#16418F]/10 text-[#16418F]',
+                        )}
+                      >
+                        {f.payment_method === 'milhas'
+                          ? `${formatMiles(f.miles_used || 0)} milhas`
+                          : formatBRL(f.cash_amount || 0)}
+                      </span>
+                    </div>
+                    <p className="text-xs text-[#6E6A5E] mt-1">
+                      {formatDateTimeBR(f.departure)}
+                      {f.airline ? ` · ${f.airline}` : ''}
+                    </p>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </Card>
+
+          <Card className="paper-card p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-widest text-[#0E8FB8]">
+                  Hotéis
+                </p>
+                <h2 className="font-serif text-xl font-semibold text-[#23201A]">
+                  Próximas hospedagens
+                </h2>
+              </div>
+              {upcomingHotels.length > 0 && (
+                <Link
+                  to="/hoteis"
+                  className="text-sm font-semibold text-[#16418F] hover:text-[#0E8FB8] flex items-center gap-0.5"
+                >
+                  Ver todas <ArrowUpRight className="w-4 h-4" />
+                </Link>
+              )}
+            </div>
+            {upcomingHotels.length === 0 ? (
+              <div className="rounded-xl border border-dashed border-[#E8E2D6] bg-white py-8 text-center">
+                <p className="text-sm text-[#6E6A5E]">
+                  Nenhuma hospedagem com check-out daqui para frente.
+                </p>
+                <Button
+                  onClick={() => setHotelSheet(true)}
+                  className="mt-3 rounded-xl bg-[#16418F] hover:bg-[#0F2C61] text-white"
+                >
+                  Registrar hospedagem
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {upcomingHotels.map((h) => (
+                  <Link
+                    key={h.id}
+                    to="/hoteis"
+                    className="block rounded-xl border border-[#E8E2D6] bg-[#FAF7F0]/60 p-4 hover:border-[#16418F]/40 transition-colors"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="flex items-center gap-2 text-sm font-semibold text-[#23201A]">
+                        <Hotel className="w-4 h-4 text-[#0E8FB8]" /> {h.hotel}
+                      </span>
+                      {h.total_value ? (
+                        <span className="text-xs font-semibold text-[#16418F]">
+                          {formatBRL(h.total_value)}
+                        </span>
+                      ) : null}
+                    </div>
+                    <p className="text-xs text-[#6E6A5E] mt-1">
+                      {formatDateBR(h.check_in)} → {formatDateBR(h.check_out)}
+                      {h.destination ? ` · ${h.destination}` : ''}
+                    </p>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </Card>
+        </div>
+
+        <p className="flex items-center gap-1.5 text-xs text-[#6E6A5E] justify-center">
+          <Sparkles className="w-3.5 h-3.5 text-[#0E8FB8]" />
+          RRMILHAS — controle pessoal de milhas e viagens
+        </p>
+
+        <ProgramFormSheet open={programSheet} onClose={() => setProgramSheet(false)} />
+        <FlightFormSheet
+          open={flightSheet}
+          onClose={() => setFlightSheet(false)}
+          programs={programs}
+        />
+        <HotelFormSheet
+          open={hotelSheet}
+          onClose={() => setHotelSheet(false)}
+          programs={programs}
+        />
+      </div>
+    </Layout>
+  )
+}

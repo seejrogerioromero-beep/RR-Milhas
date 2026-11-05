@@ -5,11 +5,10 @@ import { TooltipProvider } from '@/components/ui/tooltip'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { RequireAuth } from '@/components/RequireAuth'
 import Layout from './components/Layout'
-import Index from './pages/Index'
-import Tarefas from './pages/Tarefas'
-import Financas from './pages/Financas'
-import Anotacoes from './pages/Anotacoes'
-import Habitos from './pages/Habitos'
+import Inicio from './pages/Inicio'
+import Programas from './pages/Programas'
+import Passagens from './pages/Passagens'
+import Hoteis from './pages/Hoteis'
 import Ajustes from './pages/Ajustes'
 import Login from './pages/Login'
 import ForgotPassword from './pages/ForgotPassword'
@@ -39,11 +38,10 @@ const App = () => (
               </RequireAuth>
             }
           >
-            <Route path="/" element={<Index />} />
-            <Route path="/tarefas" element={<Tarefas />} />
-            <Route path="/financas" element={<Financas />} />
-            <Route path="/anotacoes" element={<Anotacoes />} />
-            <Route path="/habitos" element={<Habitos />} />
+            <Route path="/" element={<Inicio />} />
+            <Route path="/milhas" element={<Programas />} />
+            <Route path="/passagens" element={<Passagens />} />
+            <Route path="/hoteis" element={<Hoteis />} />
             <Route path="/ajustes" element={<Ajustes />} />
           </Route>
 

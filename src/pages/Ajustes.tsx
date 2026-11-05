@@ -207,7 +207,7 @@ export default function Ajustes() {
               value={name}
               onChange={(e) => setName(e.target.value)}
               maxLength={80}
-              className={cn('ovv-input', fieldErrors.name && 'border-[#C4452F]')}
+              className={cn('rrmilhas-input', fieldErrors.name && 'border-[#C4452F]')}
             />
             {fieldErrors.name && <p className="text-xs text-[#C4452F]">{fieldErrors.name}</p>}
           </div>
@@ -223,7 +223,7 @@ export default function Ajustes() {
                 value={user?.email || ''}
                 readOnly
                 disabled
-                className="ovv-input bg-[#FAF7F0] text-[#6E6A5E] cursor-not-allowed pr-10"
+                className="rrmilhas-input bg-[#FAF7F0] text-[#6E6A5E] cursor-not-allowed pr-10"
               />
               <Lock className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9B968A]" />
             </div>
@@ -268,7 +268,7 @@ export default function Ajustes() {
               type="password"
               value={currentPassword}
               onChange={(e) => setCurrentPassword(e.target.value)}
-              className={cn('ovv-input', pwErrors.currentPassword && 'border-[#C4452F]')}
+              className={cn('rrmilhas-input', pwErrors.currentPassword && 'border-[#C4452F]')}
             />
             {pwErrors.currentPassword && (
               <p className="text-xs text-[#C4452F]">{pwErrors.currentPassword}</p>
@@ -284,7 +284,7 @@ export default function Ajustes() {
               type="password"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
-              className={cn('ovv-input', pwErrors.newPassword && 'border-[#C4452F]')}
+              className={cn('rrmilhas-input', pwErrors.newPassword && 'border-[#C4452F]')}
             />
             {pwErrors.newPassword && (
               <p className="text-xs text-[#C4452F]">{pwErrors.newPassword}</p>
@@ -300,7 +300,7 @@ export default function Ajustes() {
               type="password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              className={cn('ovv-input', pwErrors.confirmPassword && 'border-[#C4452F]')}
+              className={cn('rrmilhas-input', pwErrors.confirmPassword && 'border-[#C4452F]')}
             />
             {pwErrors.confirmPassword && (
               <p className="text-xs text-[#C4452F]">{pwErrors.confirmPassword}</p>
@@ -338,6 +338,9 @@ export default function Ajustes() {
           <Info className="w-4 h-4 text-[#16418F]" />
           <h2 className="font-serif text-lg font-semibold text-[#23201A]">Sobre o RRMILHAS</h2>
         </div>
+        <p className="text-sm text-[#6E6A5E] -mt-3 mb-4">
+          Controle pessoal de milhas e viagens: programas, extrato, emissões e hospedagens.
+        </p>
         <dl className="space-y-3 text-sm">
           <div className="flex justify-between">
             <dt className="text-[#6E6A5E]">Versão</dt>

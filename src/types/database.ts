@@ -7,54 +7,64 @@ export interface UserRecord extends RecordModel {
   verified: boolean
 }
 
-export type TaskPriority = 'baixa' | 'media' | 'alta'
+/* ------------------------------ RRMILHAS ---------------------------------- */
 
-export interface TaskRecord extends RecordModel {
-  title: string
-  notes?: string
-  done: boolean
-  priority: TaskPriority
-  due?: string
-}
-
-export type TransactionType = 'receita' | 'despesa'
-export type TransactionCategory =
-  | 'salario'
-  | 'moradia'
-  | 'alimentacao'
-  | 'transporte'
-  | 'saude'
-  | 'lazer'
-  | 'educacao'
-  | 'outros'
-
-export interface TransactionRecord extends RecordModel {
-  description: string
-  amount: number
-  type: TransactionType
-  category: TransactionCategory
-  date: string
-}
-
-export interface NoteRecord extends RecordModel {
-  title: string
-  content: string
-  pinned: boolean
-}
-
-export type HabitColor = 'verde' | 'ambar' | 'azul' | 'coral'
-
-export interface HabitRecord extends RecordModel {
+export interface ProgramRecord extends RecordModel {
   name: string
-  icon: string
-  color: HabitColor
-  active: boolean
+  balance: number
+  /** R$ pagos, em média, por 1.000 milhas */
+  cost_per_thousand: number
+  /** Valor de mercado estimado de 1.000 milhas */
+  market_per_thousand: number
 }
 
-export interface HabitLogRecord extends RecordModel {
-  habit: string
+export type ProgramEntryType = 'entrada' | 'saida'
+
+export interface ProgramEntryRecord extends RecordModel {
+  program: string
+  type: ProgramEntryType
+  description: string
+  quantity: number
+  /** custo do milheiro registrado na entrada (R$ por 1.000 milhas) */
+  cost_per_thousand?: number
   date: string
   expand?: {
-    habit?: HabitRecord
+    program?: ProgramRecord
+  }
+}
+
+export type PaymentMethod = 'milhas' | 'dinheiro'
+
+export interface FlightRecord extends RecordModel {
+  route: string
+  airline?: string
+  departure: string
+  payment_method: PaymentMethod
+  miles_used?: number
+  /** taxas de embarque em R$ */
+  fees?: number
+  /** valor pago em dinheiro (quando não usa milhas) */
+  cash_amount?: number
+  /** valor de referência da passagem em dinheiro, para calcular a economia */
+  reference_value?: number
+  program?: string
+  entry?: string
+  expand?: {
+    program?: ProgramRecord
+  }
+}
+
+export interface HotelRecord extends RecordModel {
+  hotel: string
+  destination?: string
+  check_in: string
+  check_out: string
+  total_value?: number
+  payment_method: PaymentMethod
+  miles_used?: number
+  program?: string
+  entry?: string
+  expand?: {
+    program?: ProgramRecord
   }
 }
