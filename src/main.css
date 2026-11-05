@@ -14,7 +14,7 @@
     --card: 0 0% 100%; /* #FFFFFF */
     --card-foreground: 43 14% 12%;
 
-    --popover: 0 0% 100%;
+    --popover: 0 0% 100%; /* #FFFFFF */
     --popover-foreground: 43 14% 12%;
 
     --primary: 216 72% 28%; /* #16418F */
@@ -94,8 +94,36 @@
     animation: sheetSlide 280ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
   }
 
+  .animate-fade-in {
+    animation: fadeIn 200ms ease-out forwards;
+  }
+
+  .animate-fade-in-up {
+    animation: fadeInUp 220ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
   .ring-fill {
     transition: stroke-dashoffset 350ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 
   @keyframes fadeRise {

@@ -179,12 +179,14 @@ export default function Hoteis() {
         )}
 
         <HotelFormSheet open={sheetOpen} onClose={() => setSheetOpen(false)} programs={programs} />
-        <ConfirmDelete
-          title="Excluir hospedagem"
-          description="O registro da hospedagem será removido. O extrato do programa não é alterado."
-          onConfirm={handleDelete}
-          onCancel={() => setDeleteId(null)}
-        />
+        {deleteId && (
+          <ConfirmDelete
+            title="Excluir hospedagem"
+            description="O registro da hospedagem será removido. O extrato do programa não é alterado."
+            onConfirm={handleDelete}
+            onCancel={() => setDeleteId(null)}
+          />
+        )}
       </div>
     </Layout>
   )
