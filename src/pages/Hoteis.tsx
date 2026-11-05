@@ -8,7 +8,8 @@ import { useRealtime } from '@/hooks/use-realtime'
 import { useToast } from '@/hooks/use-toast'
 import type { HotelRecord, ProgramRecord } from '@/types/database'
 import { formatBRL, formatDateBR, nightsBetween } from '@/lib/miles'
-import { HotelFormSheet, ConfirmDelete } from '@/components/forms'
+import { ConfirmDelete } from '@/components/forms'
+import { HotelFormDialog } from '@/components/HotelFormDialog'
 import { cn } from '@/lib/utils'
 
 export default function Hoteis() {
@@ -178,7 +179,7 @@ export default function Hoteis() {
           </>
         )}
 
-        <HotelFormSheet open={sheetOpen} onClose={() => setSheetOpen(false)} programs={programs} />
+        <HotelFormDialog open={sheetOpen} onClose={() => setSheetOpen(false)} programs={programs} />
         {deleteId && (
           <ConfirmDelete
             title="Excluir hospedagem"

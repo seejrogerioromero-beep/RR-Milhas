@@ -7,6 +7,9 @@ import { formatMiles, formatBRL } from '@/lib/miles'
 import { getErrorMessage } from '@/lib/pocketbase/errors'
 import { ProgramFormSheet } from '@/components/forms'
 import { Button } from '@/components/ui/button'
+import { ClubPlanFormDialog } from '@/components/ClubPlanFormDialog'
+import { ClubPlansList } from '@/components/ClubPlansList'
+import type { ClubPlanRecord } from '@/types/database'
 import { ConfirmDelete } from '@/components/forms'
 import { CardFormDialog } from '@/components/CardFormDialog'
 import { cn } from '@/lib/utils'
@@ -23,7 +26,9 @@ export function ClubesTab({
   onChanged: () => void
 }) {
   const { toast } = useToast()
-  const [addOpen, setAddOpen] = useState(false)
+  const [planOpen, setPlanOpen] = useState(false)
+  const [editingPlan, setEditingPlan] = useState<ClubPlanRecord | null>(null)
+  const [planListKey, setPlanListKey] = useState(0)
   const [removingId, setRemovingId] = useState<string | null>(null)
   const [busyId, setBusyId] = useState<string | null>(null)
 
@@ -62,12 +67,24 @@ export function ClubesTab({
           </p>
         </div>
         <Button
-          onClick={() => setAddOpen(true)}
+          onClick={() => {
+            setEditingPlan(null)
+            setPlanOpen(true)
+          }}
           className="rounded-xl bg-[#16418F] hover:bg-[#0F2C61] text-white font-medium"
         >
           <Plus className="w-4 h-4 mr-1.5" /> Novo clube
         </Button>
       </div>
+
+      <ClubPlansList
+        reloadKey={planListKey}
+        onEdit={(plan) => {
+          setEditingPlan(plan)
+          setPlanOpen(true)
+        }}
+        onChanged={onChanged}
+      />
 
       <div className="space-y-6">
         <section>
@@ -149,12 +166,17 @@ export function ClubesTab({
         </section>
       </div>
 
-      <ProgramFormSheet
-        open={addOpen}
-        onClose={() => setAddOpen(false)}
-        onSuccess={() => {
+      <ClubPlanFormDialog
+        open={planOpen}
+        onClose={() => {
+          setPlanOpen(false)
+          setEditingPlan(null)
+        }}
+        initialPlan={editingPlan}
+        programs={programs}
+        onSaved={() => {
+          setPlanListKey((k) => k + 1)
           onChanged()
-          toast({ title: 'Clube cadastrado' })
         }}
       />
 

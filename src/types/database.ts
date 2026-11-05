@@ -103,8 +103,40 @@ export interface HotelRecord extends RecordModel {
   total_value?: number
   payment_method: PaymentMethod
   miles_used?: number
+  /** fiel ao print "Nova hospedagem" */
+  booking_code?: string
+  status?: FlightStatus
+  country?: string
+  room?: string
+  guests?: string
+  trip?: string
+  /** taxas em R$ (modo milhas) */
+  fees?: number
+  /** valor de referência em dinheiro, para calcular a economia */
+  reference_value?: number
+  /** milheiro informado manualmente (R$ por 1.000 milhas) */
+  milheiro_custom?: number
+  issued_at?: string
+  notes?: string
   program?: string
   entry?: string
+  expand?: {
+    program?: ProgramRecord
+  }
+}
+
+export type ClubBilling = 'mensal' | 'anual'
+
+/** Plano de clube: mensalidade/anuidade de um programa (ex.: Livelo). */
+export interface ClubPlanRecord extends RecordModel {
+  program: string
+  plan_name: string
+  points_per_month?: number
+  billing_day?: number
+  billing: ClubBilling
+  /** valor da cobrança (mensal ou anual, conforme `billing`) em R$ */
+  monthly_value?: number
+  active?: boolean
   expand?: {
     program?: ProgramRecord
   }
