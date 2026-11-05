@@ -1,12 +1,13 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
-import { Plane, Hotel, ArrowUpRight, Sparkles, Coins } from 'lucide-react'
+import { Plane, Hotel, ArrowUpRight, Sparkles, Coins, AlertTriangle, RefreshCw } from 'lucide-react'
 import { PageContainer as Layout } from '@/components/Layout'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import pb from '@/lib/pocketbase/client'
 import { useRealtime } from '@/hooks/use-realtime'
 import { useAuth } from '@/contexts/AuthContext'
+import { getErrorMessage } from '@/lib/pocketbase/errors'
 import type { ProgramRecord, FlightRecord, HotelRecord, ProgramEntryRecord } from '@/types/database'
 import { formatMiles, formatBRL, formatDateBR, formatDateTimeBR } from '@/lib/miles'
 import { ProgramFormSheet, FlightFormSheet, HotelFormSheet } from '@/components/forms'
@@ -20,6 +21,7 @@ export default function Inicio() {
   const [flights, setFlights] = useState<FlightRecord[]>([])
   const [hotels, setHotels] = useState<HotelRecord[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState<string | null>(null)
 
   const [programSheet, setProgramSheet] = useState(false)
   const [flightSheet, setFlightSheet] = useState(false)
@@ -35,8 +37,10 @@ export default function Inicio() {
       setPrograms(p as unknown as ProgramRecord[])
       setFlights(f as unknown as FlightRecord[])
       setHotels(h as unknown as HotelRecord[])
+      setLoadError(null)
     } catch (err) {
-      console.error(err)
+      console.error('Inicio: falha ao carregar dados', err)
+      setLoadError(getErrorMessage(err))
     } finally {
       setLoading(false)
     }
@@ -71,6 +75,24 @@ export default function Inicio() {
             Seus saldos de milhas e as próximas passagens e hospedagens.
           </p>
         </div>
+
+        {loadError && !loading && (
+          <div className="flex items-start gap-3 rounded-xl border border-[#C4452F]/40 bg-[#C4452F]/10 px-4 py-3">
+            <AlertTriangle className="w-4 h-4 text-[#C4452F] mt-0.5 shrink-0" />
+            <div className="flex-1 text-sm text-[#C4452F]">
+              <p className="font-semibold">Não foi possível carregar seus dados.</p>
+              <p className="mt-0.5 break-words">{loadError}</p>
+            </div>
+            <Button
+              onClick={reload}
+              size="sm"
+              variant="outline"
+              className="rounded-lg border-[#C4452F]/40 text-[#C4452F] hover:bg-[#C4452F]/10 shrink-0"
+            >
+              <RefreshCw className="w-4 h-4 mr-1.5" /> Tentar novamente
+            </Button>
+          </div>
+        )}
 
         {/* MILHAS */}
         <Card className="paper-card p-6">
