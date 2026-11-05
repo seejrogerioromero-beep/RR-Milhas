@@ -1,0 +1,173 @@
+/* Global styles - Theme, font, utilities, animations and global components */
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..700;1,9..144,400..600&family=Plus+Jakarta+Sans:ital,wght@0,300..800;1,300..700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Caderno seguro palette */
+    --background: 42 43% 96%; /* #FAF7F0 */
+    --foreground: 43 14% 12%; /* #23201A */
+
+    --card: 0 0% 100%; /* #FFFFFF */
+    --card-foreground: 43 14% 12%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 43 14% 12%;
+
+    --primary: 159 50% 24%; /* #1E5C46 */
+    --primary-foreground: 42 43% 98%;
+
+    --secondary: 42 25% 92%;
+    --secondary-foreground: 43 14% 12%;
+
+    --muted: 42 25% 92%;
+    --muted-foreground: 43 8% 40%; /* #6E6A5E */
+
+    --accent: 36 79% 57%; /* #E8A33D */
+    --accent-foreground: 43 14% 12%;
+
+    --destructive: 8 61% 48%; /* #C4452F */
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 39 26% 87%; /* #E8E2D6 */
+    --input: 39 26% 87%;
+    --ring: 36 79% 57%; /* #E8A33D */
+
+    --radius: 1rem; /* 16px */
+
+    --sidebar-background: 147 16% 14%; /* #1E2A24 */
+    --sidebar-foreground: 42 43% 96%;
+    --sidebar-primary: 36 79% 57%;
+    --sidebar-primary-foreground: 43 14% 12%;
+    --sidebar-accent: 147 16% 18%;
+    --sidebar-accent-foreground: 42 43% 96%;
+    --sidebar-border: 147 16% 20%;
+    --sidebar-ring: 36 79% 57%;
+
+    --chart-1: 159 50% 24%; /* moradia #1E5C46 */
+    --chart-2: 36 79% 57%; /* alimentacao #E8A33D */
+    --chart-3: 209 46% 43%; /* transporte #3B6FA0 */
+    --chart-4: 8 61% 48%; /* saude #C4452F */
+    --chart-5: 259 43% 55%; /* lazer #7C5CBF */
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased font-sans;
+    background-color: #faf7f0;
+    color: #23201a;
+    font-family:
+      'Plus Jakarta Sans',
+      system-ui,
+      -apple-system,
+      sans-serif;
+  }
+
+  h1,
+  h2,
+  h3,
+  .font-serif {
+    font-family: 'Fraunces', Georgia, serif;
+    font-variation-settings: 'opsz' 32;
+  }
+
+  /* NEVER REMOVE THIS */
+  section[aria-label='Notifications alt+T'] {
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+}
+
+@layer utilities {
+  /* Design system motions */
+  .fade-rise {
+    animation: fadeRise 220ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  .sheet-slide {
+    animation: sheetSlide 280ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  .ring-fill {
+    transition: stroke-dashoffset 350ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  @keyframes fadeRise {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes sheetSlide {
+    from {
+      transform: translateX(100%);
+    }
+    to {
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes sheetSlideUp {
+    from {
+      transform: translateY(100%);
+    }
+    to {
+      transform: translateY(0);
+    }
+  }
+
+  /* Card hover lift & shadows */
+  .paper-card {
+    background-color: #ffffff;
+    border: 1px solid #e8e2d6;
+    border-radius: 16px;
+    box-shadow: 0 1px 3px rgba(35, 32, 26, 0.06);
+    transition:
+      transform 180ms ease,
+      box-shadow 180ms ease,
+      border-color 180ms ease;
+  }
+
+  .paper-card-interactive {
+    background-color: #ffffff;
+    border: 1px solid #e8e2d6;
+    border-radius: 16px;
+    box-shadow: 0 1px 3px rgba(35, 32, 26, 0.06);
+    transition:
+      transform 180ms ease,
+      box-shadow 180ms ease,
+      border-color 180ms ease;
+  }
+  .paper-card-interactive:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(35, 32, 26, 0.1);
+  }
+
+  /* Form input & button styling */
+  .ovv-input {
+    border-radius: 12px;
+    border: 1px solid #e8e2d6;
+    background-color: #faf7f0;
+    transition: all 180ms ease;
+  }
+  .ovv-input:focus {
+    outline: none;
+    border-color: #e8a33d;
+    box-shadow: 0 0 0 3px rgba(232, 163, 61, 0.35);
+  }
+
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
+}
