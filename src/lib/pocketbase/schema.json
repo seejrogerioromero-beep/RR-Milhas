@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-06T11:01:25.561Z",
+  "generatedAt": "2026-11-12T11:41:07.905Z",
   "collections": [
     {
       "name": "users",
@@ -378,6 +378,18 @@
         {
           "name": "is_club",
           "type": "bool",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "miles_expiry",
+          "type": "date",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "elite_status",
+          "type": "text",
           "required": false,
           "system": false
         }

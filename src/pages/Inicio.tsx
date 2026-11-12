@@ -1,6 +1,17 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
-import { Plane, Hotel, ArrowUpRight, Sparkles, Coins, AlertTriangle, RefreshCw } from 'lucide-react'
+import {
+  Plane,
+  Hotel,
+  ArrowUpRight,
+  Sparkles,
+  Coins,
+  AlertTriangle,
+  RefreshCw,
+  Timer,
+  Wallet,
+  Crown,
+} from 'lucide-react'
 import { PageContainer as Layout } from '@/components/Layout'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -65,6 +76,27 @@ export default function Inicio() {
     .sort((a, b) => a.check_out.localeCompare(b.check_out))
     .slice(0, 3)
 
+  // Patrimônio em milhas: para cada programa com saldo e custo do milheiro, saldo × (milheiro/1000)
+  const patrimonio = programs.reduce(
+    (acc, p) =>
+      (p.balance || 0) > 0 && (p.cost_per_thousand || 0) > 0
+        ? acc + ((p.balance || 0) / 1000) * (p.cost_per_thousand || 0)
+        : acc,
+    0,
+  )
+
+  // Alertas de vencimento: saldo > 0 e validade nos próximos 90 dias
+  const DAY_MS = 86400000
+  const expiryAlerts = programs
+    .map((p) => {
+      if (!(p.balance > 0) || !p.miles_expiry) return null
+      const days = Math.ceil((new Date(p.miles_expiry).getTime() - now) / DAY_MS)
+      if (isNaN(days) || days > 90) return null
+      return { program: p, days }
+    })
+    .filter((a): a is { program: ProgramRecord; days: number } => a !== null)
+    .sort((a, b) => a.days - b.days)
+
   return (
     <Layout>
       <div className="fade-rise space-y-6 max-w-5xl">
@@ -93,6 +125,61 @@ export default function Inicio() {
             </Button>
           </div>
         )}
+
+        {/* ALERTAS DE VENCIMENTO DE MILHAS */}
+        {!loading && expiryAlerts.length > 0 && (
+          <div className="space-y-2">
+            {expiryAlerts.map(({ program: p, days }) => (
+              <div
+                key={p.id}
+                className={cn(
+                  'flex items-start gap-3 rounded-xl border px-4 py-3',
+                  days <= 15
+                    ? 'border-[#C4452F]/40 bg-[#C4452F]/10'
+                    : 'border-[#D9A404]/40 bg-[#D9A404]/10',
+                )}
+              >
+                <AlertTriangle
+                  className={cn(
+                    'w-4 h-4 mt-0.5 shrink-0',
+                    days <= 15 ? 'text-[#C4452F]' : 'text-[#B8860B]',
+                  )}
+                />
+                <p
+                  className={cn(
+                    'text-sm font-semibold',
+                    days <= 15 ? 'text-[#C4452F]' : 'text-[#B8860B]',
+                  )}
+                >
+                  {formatMiles(p.balance)} milhas {p.name}{' '}
+                  {days < 0 ? 'expiraram' : days === 0 ? 'expiram hoje' : `expiram em ${days} dias`}
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* PATRIMÔNIO EM MILHAS */}
+        <Card className="paper-card p-6">
+          <div className="flex items-center gap-4">
+            <div className="grid place-items-center w-11 h-11 rounded-xl bg-[#16418F]/10 shrink-0">
+              <Wallet className="w-5 h-5 text-[#16418F]" />
+            </div>
+            <div className="flex-1">
+              <p className="text-[11px] font-bold uppercase tracking-widest text-[#0E8FB8]">
+                Patrimônio em milhas
+              </p>
+              <p className="font-serif text-2xl font-bold text-[#23201A] tabular-nums">
+                {formatBRL(patrimonio)}
+              </p>
+              {patrimonio === 0 && (
+                <p className="text-xs text-[#6E6A5E] mt-0.5">
+                  Informe o saldo e o custo do milheiro dos seus programas para calcular.
+                </p>
+              )}
+            </div>
+          </div>
+        </Card>
 
         {/* MILHAS */}
         <Card className="paper-card p-6">
@@ -146,6 +233,20 @@ export default function Inicio() {
                     {formatMiles(p.balance || 0)}
                     <span className="text-sm font-normal text-[#6E6A5E]"> milhas</span>
                   </p>
+                  {(p.elite_status || p.miles_expiry) && (
+                    <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                      {p.elite_status && (
+                        <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-[#16418F]/10 text-[#16418F]">
+                          <Crown className="w-3 h-3" /> {p.elite_status}
+                        </span>
+                      )}
+                      {p.miles_expiry && (
+                        <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-[#6E6A5E]/10 text-[#6E6A5E]">
+                          <Timer className="w-3 h-3" /> expira {formatDateBR(p.miles_expiry)}
+                        </span>
+                      )}
+                    </div>
+                  )}
                 </Link>
               ))}
             </div>

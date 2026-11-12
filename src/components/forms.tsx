@@ -75,6 +75,8 @@ export function ProgramFormSheet({
   const [balance, setBalance] = useState('')
   const [costPerThousand, setCostPerThousand] = useState('')
   const [marketPerThousand, setMarketPerThousand] = useState('')
+  const [milesExpiry, setMilesExpiry] = useState('')
+  const [eliteStatus, setEliteStatus] = useState('')
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [saving, setSaving] = useState(false)
 
@@ -102,12 +104,16 @@ export function ProgramFormSheet({
           ? initialProgram.market_per_thousand.toFixed(2).replace('.', ',')
           : '',
       )
+      setMilesExpiry(initialProgram.miles_expiry ? initialProgram.miles_expiry.slice(0, 10) : '')
+      setEliteStatus(initialProgram.elite_status || '')
     } else {
       setSelectedCatalogId('')
       setCustomName('')
       setBalance('')
       setCostPerThousand('')
       setMarketPerThousand('')
+      setMilesExpiry('')
+      setEliteStatus('')
     }
     setErrors({})
   }, [initialProgram, open])
@@ -149,6 +155,8 @@ export function ProgramFormSheet({
         balance: bal,
         cost_per_thousand: cost,
         market_per_thousand: parseNumberInput(marketPerThousand) || 0,
+        miles_expiry: milesExpiry || '',
+        elite_status: eliteStatus.trim(),
       }
 
       if (isEditing && initialProgram?.id) {
@@ -305,6 +313,36 @@ export function ProgramFormSheet({
               placeholder="Ex: 72,00"
               className="rrmilhas-input tabular-nums"
             />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1.5">
+            <Label htmlFor="program-expiry" className="text-xs font-semibold text-[#23201A]">
+              As milhas expiram em
+            </Label>
+            <Input
+              id="program-expiry"
+              type="date"
+              value={milesExpiry}
+              onChange={(e) => setMilesExpiry(e.target.value)}
+              className="rrmilhas-input tabular-nums"
+            />
+            <p className="text-[11px] text-[#6E6A5E]">Opcional — deixo em branco se não expiram.</p>
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="program-elite" className="text-xs font-semibold text-[#23201A]">
+              Status elite
+            </Label>
+            <Input
+              id="program-elite"
+              value={eliteStatus}
+              onChange={(e) => setEliteStatus(e.target.value)}
+              maxLength={40}
+              placeholder="Ex: Gold, Diamante"
+              className="rrmilhas-input"
+            />
+            <p className="text-[11px] text-[#6E6A5E]">Opcional — aparece como selo no card.</p>
           </div>
         </div>
 

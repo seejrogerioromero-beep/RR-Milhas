@@ -18,6 +18,10 @@ export interface ProgramRecord extends RecordModel {
   market_per_thousand: number
   /** marcado como clube/banco — pode ser origem de transferência de pontos */
   is_club?: boolean
+  /** data de validade das milhas (opcional) */
+  miles_expiry?: string
+  /** status elite no programa (ex.: Gold, Diamante) — opcional */
+  elite_status?: string
 }
 
 export interface CreditCardRecord extends RecordModel {

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { Plus, Coins, Pencil, Trash2, TrendingUp, ArrowRight } from 'lucide-react'
+import { Plus, Coins, Pencil, Trash2, TrendingUp, ArrowRight, Crown, Timer } from 'lucide-react'
 import { PageContainer as Layout } from '@/components/Layout'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -8,7 +8,7 @@ import pb from '@/lib/pocketbase/client'
 import { useRealtime } from '@/hooks/use-realtime'
 import { useToast } from '@/hooks/use-toast'
 import type { ProgramRecord } from '@/types/database'
-import { formatMiles, formatBRL } from '@/lib/miles'
+import { formatMiles, formatBRL, formatDateBR } from '@/lib/miles'
 import { ProgramFormSheet, ConfirmDelete } from '@/components/forms'
 import { ProgramStatement } from '@/components/ProgramStatement'
 import { cn } from '@/lib/utils'
@@ -164,6 +164,20 @@ export default function Programas() {
                     {formatMiles(p.balance || 0)}
                     <span className="text-sm font-normal text-[#6E6A5E]"> milhas</span>
                   </p>
+                  {(p.elite_status || p.miles_expiry) && (
+                    <div className="flex flex-wrap items-center gap-1.5 mt-3">
+                      {p.elite_status && (
+                        <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-[#16418F]/10 text-[#16418F]">
+                          <Crown className="w-3 h-3" /> {p.elite_status}
+                        </span>
+                      )}
+                      {p.miles_expiry && (
+                        <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-[#6E6A5E]/10 text-[#6E6A5E]">
+                          <Timer className="w-3 h-3" /> expira {formatDateBR(p.miles_expiry)}
+                        </span>
+                      )}
+                    </div>
+                  )}
                   <div className="flex flex-wrap gap-x-4 gap-y-1 mt-3 text-xs">
                     <span className="text-[#6E6A5E]">
                       Custo médio:{' '}
