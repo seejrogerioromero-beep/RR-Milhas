@@ -146,6 +146,29 @@ export interface ClubPlanRecord extends RecordModel {
   }
 }
 
+/** Viagem cadastrada no módulo Viagens — agrupa passagens e hospedagens pelo nome. */
+export interface TripRecord extends RecordModel {
+  name: string
+  destination?: string
+  start_date?: string
+  end_date?: string
+  notes?: string
+}
+
+/** Ponto esperado ("milhas a chegar") — versão manual do Balance Watch. */
+export type ExpectedPointStatus = 'pendente' | 'confirmado'
+
+export interface ExpectedPointRecord extends RecordModel {
+  program: string
+  miles: number
+  description?: string
+  expected_date?: string
+  status: ExpectedPointStatus
+  expand?: {
+    program?: ProgramRecord
+  }
+}
+
 export interface PassengerRecord extends RecordModel {
   name: string
   document?: string

@@ -9,6 +9,8 @@ import Inicio from './pages/Inicio'
 import Programas from './pages/Programas'
 import Passagens from './pages/Passagens'
 import Hoteis from './pages/Hoteis'
+import Viagens from './pages/Viagens'
+import PontosEsperados from './pages/PontosEsperados'
 import Lancamentos from './pages/Lancamentos'
 
 import Passageiros from './pages/Passageiros'
@@ -47,8 +49,10 @@ const App = () => (
             <Route path="/milhas" element={<Programas />} />
             <Route path="/programas" element={<Programas />} />
 
+            <Route path="/viagens" element={<Viagens />} />
             <Route path="/passagens" element={<Passagens />} />
             <Route path="/hoteis" element={<Hoteis />} />
+            <Route path="/pontos-esperados" element={<PontosEsperados />} />
             <Route path="/lancamentos" element={<Lancamentos />} />
             <Route path="/passageiros" element={<Passageiros />} />
             <Route path="/calculadoras" element={<Calculadoras />} />

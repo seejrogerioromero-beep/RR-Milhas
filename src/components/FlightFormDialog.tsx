@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { useToast } from '@/hooks/use-toast'
 import pb from '@/lib/pocketbase/client'
 import { extractFieldErrors } from '@/lib/pocketbase/errors'
-import type { ProgramRecord, PassengerRecord } from '@/types/database'
+import type { ProgramRecord, PassengerRecord, TripRecord } from '@/types/database'
 import { formatBRL, maskBRL, parseNumberInput } from '@/lib/miles'
 import { cn } from '@/lib/utils'
 
@@ -116,6 +116,7 @@ export function FlightFormDialog({
   const [trip, setTrip] = useState('')
   const [issuedAt, setIssuedAt] = useState(todayISO)
   const [notes, setNotes] = useState('')
+  const [tripSuggestions, setTripSuggestions] = useState<string[]>([])
 
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [saving, setSaving] = useState(false)
@@ -131,6 +132,22 @@ export function FlightFormDialog({
       .then((rows) => {
         if (cancelled) return
         setAllPassengers((rows as unknown as PassengerRecord[]).map((p) => p.name).filter(Boolean))
+      })
+      .catch(() => {})
+    return () => {
+      cancelled = true
+    }
+  }, [open])
+
+  // Viagens cadastradas, para sugestão no campo Viagem (digitação livre)
+  useEffect(() => {
+    if (!open) return
+    let cancelled = false
+    pb.collection('trips')
+      .getFullList({ sort: 'name' })
+      .then((rows) => {
+        if (cancelled) return
+        setTripSuggestions((rows as unknown as TripRecord[]).map((t) => t.name).filter(Boolean))
       })
       .catch(() => {})
     return () => {
@@ -258,6 +275,7 @@ export function FlightFormDialog({
           paymentMode === 'milhas' && custoMode === 'informar' ? milheiroNum : undefined,
         issued_at: `${issuedAt} 12:00:00.000Z`,
         notes: notes.trim() || undefined,
+        trip: trip.trim() || undefined,
         ...(paymentMode === 'milhas' ? { program: programId, entry: entryId } : {}),
       })
 
@@ -713,8 +731,14 @@ export function FlightFormDialog({
                 onChange={(e) => setTrip(e.target.value)}
                 maxLength={120}
                 placeholder="Sem viagem"
+                list="flight-trip-suggestions"
                 className="rrmilhas-input"
               />
+              <datalist id="flight-trip-suggestions">
+                {tripSuggestions.map((s) => (
+                  <option key={s} value={s} />
+                ))}
+              </datalist>
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="fl-issued" className="text-xs font-semibold text-[#23201A]">

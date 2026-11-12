@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { useToast } from '@/hooks/use-toast'
 import pb from '@/lib/pocketbase/client'
 import { extractFieldErrors } from '@/lib/pocketbase/errors'
-import type { ProgramRecord, PassengerRecord } from '@/types/database'
+import type { ProgramRecord, PassengerRecord, TripRecord } from '@/types/database'
 import { formatBRL, parseNumberInput } from '@/lib/miles'
 import { SegToggle } from '@/components/SegToggle'
 
@@ -67,6 +67,7 @@ export function HotelFormDialog({
   const [trip, setTrip] = useState('')
   const [issuedAt, setIssuedAt] = useState(todayISO)
   const [notes, setNotes] = useState('')
+  const [tripSuggestions, setTripSuggestions] = useState<string[]>([])
 
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [saving, setSaving] = useState(false)
@@ -82,6 +83,22 @@ export function HotelFormDialog({
       .then((rows) => {
         if (cancelled) return
         setAllPassengers((rows as unknown as PassengerRecord[]).map((p) => p.name).filter(Boolean))
+      })
+      .catch(() => {})
+    return () => {
+      cancelled = true
+    }
+  }, [open])
+
+  // Viagens cadastradas, para sugestão no campo Viagem (digitação livre)
+  useEffect(() => {
+    if (!open) return
+    let cancelled = false
+    pb.collection('trips')
+      .getFullList({ sort: 'name' })
+      .then((rows) => {
+        if (cancelled) return
+        setTripSuggestions((rows as unknown as TripRecord[]).map((t) => t.name).filter(Boolean))
       })
       .catch(() => {})
     return () => {
@@ -203,7 +220,6 @@ export function HotelFormDialog({
         notes: notes.trim() || undefined,
         ...(paymentMode === 'milhas' ? { program: programId, entry: entryId } : {}),
       })
-
       toast({
         title: 'Reserva registrada',
         description:
@@ -551,8 +567,14 @@ export function HotelFormDialog({
                 onChange={(e) => setTrip(e.target.value)}
                 maxLength={120}
                 placeholder="Sem viagem"
+                list="hotel-trip-suggestions"
                 className="rrmilhas-input"
               />
+              <datalist id="hotel-trip-suggestions">
+                {tripSuggestions.map((s) => (
+                  <option key={s} value={s} />
+                ))}
+              </datalist>
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="ht-issued" className={labelCls}>

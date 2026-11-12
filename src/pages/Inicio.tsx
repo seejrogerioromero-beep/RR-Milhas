@@ -11,6 +11,8 @@ import {
   Timer,
   Wallet,
   Crown,
+  Map,
+  Hourglass,
 } from 'lucide-react'
 import { PageContainer as Layout } from '@/components/Layout'
 import { Card } from '@/components/ui/card'
@@ -19,7 +21,14 @@ import pb from '@/lib/pocketbase/client'
 import { useRealtime } from '@/hooks/use-realtime'
 import { useAuth } from '@/contexts/AuthContext'
 import { getErrorMessage } from '@/lib/pocketbase/errors'
-import type { ProgramRecord, FlightRecord, HotelRecord, ProgramEntryRecord } from '@/types/database'
+import type {
+  ProgramRecord,
+  FlightRecord,
+  HotelRecord,
+  ProgramEntryRecord,
+  TripRecord,
+  ExpectedPointRecord,
+} from '@/types/database'
 import { formatMiles, formatBRL, formatDateBR, formatDateTimeBR } from '@/lib/miles'
 import { ProgramFormSheet, FlightFormSheet, HotelFormSheet } from '@/components/forms'
 import { cn } from '@/lib/utils'
@@ -31,6 +40,8 @@ export default function Inicio() {
   const [programs, setPrograms] = useState<ProgramRecord[]>([])
   const [flights, setFlights] = useState<FlightRecord[]>([])
   const [hotels, setHotels] = useState<HotelRecord[]>([])
+  const [trips, setTrips] = useState<TripRecord[]>([])
+  const [expected, setExpected] = useState<ExpectedPointRecord[]>([])
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState<string | null>(null)
 
@@ -40,14 +51,18 @@ export default function Inicio() {
 
   const reload = useCallback(async () => {
     try {
-      const [p, f, h] = await Promise.all([
+      const [p, f, h, tr, ep] = await Promise.all([
         pb.collection('programs').getFullList({ sort: 'name' }),
         pb.collection('flights').getFullList({ sort: '-departure' }),
         pb.collection('hotels').getFullList({ sort: '-check_out' }),
+        pb.collection('trips').getFullList({ sort: 'start_date' }),
+        pb.collection('expected_points').getFullList({ filter: "status='pendente'" }),
       ])
       setPrograms(p as unknown as ProgramRecord[])
       setFlights(f as unknown as FlightRecord[])
       setHotels(h as unknown as HotelRecord[])
+      setTrips(tr as unknown as TripRecord[])
+      setExpected(ep as unknown as ExpectedPointRecord[])
       setLoadError(null)
     } catch (err) {
       console.error('Inicio: falha ao carregar dados', err)
@@ -65,6 +80,8 @@ export default function Inicio() {
   useRealtime<FlightRecord>('flights', () => reload())
   useRealtime<HotelRecord>('hotels', () => reload())
   useRealtime<ProgramEntryRecord>('program_entries', () => reload())
+  useRealtime<TripRecord>('trips', () => reload())
+  useRealtime<ExpectedPointRecord>('expected_points', () => reload())
 
   const now = Date.now()
   const upcomingFlights = flights
@@ -85,8 +102,31 @@ export default function Inicio() {
     0,
   )
 
-  // Alertas de vencimento: saldo > 0 e validade nos próximos 90 dias
+  // Próxima viagem futura: mais próximo por start_date (fallback: sem data, depois de criação)
   const DAY_MS = 86400000
+  const today = new Date(new Date().toISOString().slice(0, 10)) // meia-noite UTC, para comparar com start_date (UTC)
+  const nextTrip = trips
+    .filter((t) => !t.start_date || new Date(t.start_date).getTime() >= today.getTime())
+    .sort((a, b) => {
+      const da = a.start_date || '9999-12-31'
+      const db = b.start_date || '9999-12-31'
+      if (da === db) return (a.end_date || '9999-12-31').localeCompare(b.end_date || '9999-12-31')
+      return da.localeCompare(db)
+    })[0]
+  const nextTripCountdown = (() => {
+    if (!nextTrip?.start_date) return null
+    const ms = new Date(nextTrip.start_date).getTime() - today.getTime()
+    const days = Math.round(ms / DAY_MS)
+    if (isNaN(days) || days < 0) return null
+    if (days === 0) return 'é hoje!'
+    if (days === 1) return 'é amanhã'
+    return `em ${days} dias`
+  })()
+
+  // Total de milhas pendentes a chegar (versão manual do Balance Watch)
+  const expectedMiles = expected.reduce((sum, e) => sum + (e.miles || 0), 0)
+
+  // Alertas de vencimento: saldo > 0 e validade nos próximos 90 dias
   const expiryAlerts = programs
     .map((p) => {
       if (!(p.balance > 0) || !p.miles_expiry) return null
@@ -159,27 +199,89 @@ export default function Inicio() {
           </div>
         )}
 
-        {/* PATRIMÔNIO EM MILHAS */}
-        <Card className="paper-card p-6">
-          <div className="flex items-center gap-4">
-            <div className="grid place-items-center w-11 h-11 rounded-xl bg-[#16418F]/10 shrink-0">
-              <Wallet className="w-5 h-5 text-[#16418F]" />
-            </div>
-            <div className="flex-1">
-              <p className="text-[11px] font-bold uppercase tracking-widest text-[#0E8FB8]">
-                Patrimônio em milhas
-              </p>
-              <p className="font-serif text-2xl font-bold text-[#23201A] tabular-nums">
-                {formatBRL(patrimonio)}
-              </p>
-              {patrimonio === 0 && (
-                <p className="text-xs text-[#6E6A5E] mt-0.5">
-                  Informe o saldo e o custo do milheiro dos seus programas para calcular.
+        {/* PATRIMÔNIO EM MILHAS + PRÓXIMA VIAGEM + MILHAS A CHEGAR */}
+        <div className="grid md:grid-cols-3 gap-6">
+          <Card className="paper-card p-6">
+            <div className="flex items-center gap-4">
+              <div className="grid place-items-center w-11 h-11 rounded-xl bg-[#16418F]/10 shrink-0">
+                <Wallet className="w-5 h-5 text-[#16418F]" />
+              </div>
+              <div className="flex-1">
+                <p className="text-[11px] font-bold uppercase tracking-widest text-[#0E8FB8]">
+                  Patrimônio em milhas
                 </p>
-              )}
+                <p className="font-serif text-2xl font-bold text-[#23201A] tabular-nums">
+                  {formatBRL(patrimonio)}
+                </p>
+                {patrimonio === 0 && (
+                  <p className="text-xs text-[#6E6A5E] mt-0.5">
+                    Informe o saldo e o custo do milheiro dos seus programas para calcular.
+                  </p>
+                )}
+              </div>
             </div>
-          </div>
-        </Card>
+          </Card>
+
+          <Card className="paper-card p-6">
+            <Link to="/viagens" className="block group">
+              <div className="flex items-center gap-4">
+                <div className="grid place-items-center w-11 h-11 rounded-xl bg-[#16418F]/10 shrink-0">
+                  <Map className="w-5 h-5 text-[#16418F]" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-[11px] font-bold uppercase tracking-widest text-[#0E8FB8]">
+                    Próxima viagem
+                  </p>
+                  {nextTrip ? (
+                    <>
+                      <p className="font-serif text-xl font-bold text-[#23201A] truncate group-hover:text-[#16418F] transition-colors">
+                        {nextTrip.name}
+                      </p>
+                      <p className="text-xs text-[#6E6A5E] mt-0.5">
+                        {nextTripCountdown ?? formatDateBR(nextTrip.start_date)}
+                        {nextTrip.destination ? ` · ${nextTrip.destination}` : ''}
+                      </p>
+                    </>
+                  ) : (
+                    <p className="text-xs text-[#6E6A5E] mt-0.5">
+                      Nenhuma viagem cadastrada — comece aqui.
+                    </p>
+                  )}
+                </div>
+              </div>
+            </Link>
+          </Card>
+
+          <Card className="paper-card p-6">
+            <Link to="/pontos-esperados" className="block group">
+              <div className="flex items-center gap-4">
+                <div className="grid place-items-center w-11 h-11 rounded-xl bg-[#16418F]/10 shrink-0">
+                  <Hourglass className="w-5 h-5 text-[#16418F]" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-[11px] font-bold uppercase tracking-widest text-[#0E8FB8]">
+                    Milhas a chegar
+                  </p>
+                  {expected.length > 0 ? (
+                    <>
+                      <p className="font-serif text-2xl font-bold text-[#23201A] tabular-nums">
+                        {formatMiles(expectedMiles)}
+                        <span className="text-sm font-normal text-[#6E6A5E]"> milhas</span>
+                      </p>
+                      <p className="text-xs text-[#6E6A5E] mt-0.5">
+                        {expected.length === 1
+                          ? '1 item pendente'
+                          : `${expected.length} itens pendentes`}
+                      </p>
+                    </>
+                  ) : (
+                    <p className="text-xs text-[#6E6A5E] mt-0.5">Nada registrado — comece aqui.</p>
+                  )}
+                </div>
+              </div>
+            </Link>
+          </Card>
+        </div>
 
         {/* MILHAS */}
         <Card className="paper-card p-6">
