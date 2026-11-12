@@ -9,6 +9,12 @@ export interface ExtractedProgram {
   holder: string
 }
 
+export interface ExtractedMovement {
+  date: string
+  description: string
+  amount: number
+}
+
 export interface ExtractedFlight {
   origin: string
   destination: string
@@ -30,6 +36,7 @@ export interface ExtractMeta {
 
 export interface ExtractResult {
   programs: ExtractedProgram[]
+  movements: ExtractedMovement[]
   flights: ExtractedFlight[]
   trips: ExtractedTrip[]
   meta: ExtractMeta
@@ -38,7 +45,6 @@ export interface ExtractResult {
 export interface ImportInput {
   text: string
   file?: File
-  pageCount?: number
   imageCount?: number
 }
 
@@ -50,21 +56,38 @@ export class ImportExtractError extends Error {
   }
 }
 
-/** Chama POST /backend/v1/import-extract (texto e/ou arquivo multipart). */
+/** Tipos de arquivo que a extração entende: PDF (texto) e imagens (visão). */
+export const ACCEPTED_MIME = ['image/jpeg', 'image/png', 'image/webp'] as const
+
+export const isImageFile = (file: File) => ACCEPTED_MIME.includes(file.type as never)
+
+/** Converte a imagem escolhida em data URL (só em memória, nunca salva). */
+export const fileToDataUrl = (file: File): Promise<string> =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(String(reader.result || ''))
+    reader.onerror = () => reject(new Error('read-error'))
+    reader.readAsDataURL(file)
+  })
+
+/** Chama POST /backend/v1/import-extract (texto, PDF multipart e/ou imagens em data URL). */
 export async function extractFromDocument({
   text,
   file,
-  pageCount = 0,
   imageCount = 0,
 }: ImportInput): Promise<ExtractResult> {
+  const isImage = file ? isImageFile(file) : false
+  const dataUrl = isImage ? await fileToDataUrl(file) : ''
+  if (file && isImage && !dataUrl) {
+    throw new ImportExtractError('Não foi possível ler a imagem enviada.', 422)
+  }
+
   let res: Response
   try {
-    if (file) {
+    if (file && !isImage) {
       const form = new FormData()
       form.append('file', file)
       if (text.trim()) form.append('text', text)
-      form.append('page_count', String(pageCount))
-      form.append('image_count', String(imageCount))
       res = await fetch(`${import.meta.env.VITE_POCKETBASE_URL}/backend/v1/import-extract`, {
         method: 'POST',
         headers: { Authorization: pb.authStore.token },
@@ -77,7 +100,11 @@ export async function extractFromDocument({
           'Content-Type': 'application/json',
           Authorization: pb.authStore.token,
         },
-        body: JSON.stringify({ text, page_count: pageCount, image_count: imageCount }),
+        body: JSON.stringify({
+          text,
+          image: dataUrl || undefined,
+          image_count: imageCount,
+        }),
       })
     }
   } catch {

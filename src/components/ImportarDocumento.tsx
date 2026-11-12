@@ -1,14 +1,13 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   UploadCloud,
-  FileText,
-  ClipboardPaste,
   RefreshCw,
   AlertTriangle,
   Plane,
   Star,
   Map as MapIcon,
-  Check,
+  ChevronDown,
+  ChevronRight,
 } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -22,13 +21,15 @@ import { cn } from '@/lib/utils'
 import type { ProgramRecord, PassengerRecord, TripRecord } from '@/types/database'
 import {
   extractFromDocument,
+  isImageFile,
   ImportExtractError,
   type ExtractResult,
   type ExtractedFlight,
+  type ExtractedMovement,
   type ExtractedProgram,
   type ExtractedTrip,
 } from '@/services/importExtract'
-import { formatDateTimeBR, formatMiles, parseNumberInput } from '@/lib/miles'
+import { formatDateBR, formatDateTimeBR, formatMiles, parseNumberInput } from '@/lib/miles'
 import { isForbiddenProgramName } from '@/lib/programCatalog'
 
 const ACCEPTED = '.pdf,.jpg,.jpeg,.png,.webp'
@@ -50,6 +51,11 @@ interface ReviewProgramState {
   programId: string // '' = criar novo programa
 }
 
+interface ReviewMovementState {
+  extracted: ExtractedMovement
+  selected: boolean
+}
+
 interface ReviewTripState {
   extracted: ExtractedTrip
   selected: boolean
@@ -69,6 +75,8 @@ export function ImportarDocumento({ onDone }: { onDone: () => void }) {
   const [result, setResult] = useState<ExtractResult | null>(null)
   const [flights, setFlights] = useState<ReviewFlightState[]>([])
   const [programs, setPrograms] = useState<ReviewProgramState[]>([])
+  const [movements, setMovements] = useState<ReviewMovementState[]>([])
+  const [movesOpen, setMovesOpen] = useState(false)
   const [trips, setTrips] = useState<ReviewTripState[]>([])
   const [saving, setSaving] = useState(false)
 
@@ -93,6 +101,21 @@ export function ImportarDocumento({ onDone }: { onDone: () => void }) {
 
   const canRead = (text.trim().length >= 10 || file != null) && !reading
 
+  const acceptFile = (chosen: File) => {
+    const ok = /\.(pdf|jpe?g|png|webp)$/i.test(chosen.name)
+    if (ok) {
+      setFile(chosen)
+      setExtractError(null)
+      setResult(null)
+      setFlights([])
+      setPrograms([])
+      setMovements([])
+      setTrips([])
+    } else {
+      setExtractError('Formato não suportado. Use PDF, JPG, PNG ou WebP.')
+    }
+  }
+
   const handleRead = async () => {
     if (!canRead) return
     setReading(true)
@@ -100,12 +123,13 @@ export function ImportarDocumento({ onDone }: { onDone: () => void }) {
     setResult(null)
     setFlights([])
     setPrograms([])
+    setMovements([])
     setTrips([])
     try {
       const res = await extractFromDocument({
         text: text.trim(),
         file: file ?? undefined,
-        imageCount: 0,
+        imageCount: file && isImageFile(file) ? 1 : 0,
       })
       setResult(res)
       setFlights(
@@ -127,7 +151,9 @@ export function ImportarDocumento({ onDone }: { onDone: () => void }) {
           programId: '',
         })),
       )
+      setMovements(res.movements.map((m) => ({ extracted: m, selected: true })))
       setTrips(res.trips.map((t) => ({ extracted: t, selected: true })))
+      if (res.movements.length > 0) setMovesOpen(true)
     } catch (err) {
       if (err instanceof ImportExtractError) {
         setExtractError(err.message)
@@ -145,6 +171,7 @@ export function ImportarDocumento({ onDone }: { onDone: () => void }) {
     setResult(null)
     setFlights([])
     setPrograms([])
+    setMovements([])
     setTrips([])
     setExtractError(null)
   }
@@ -171,34 +198,72 @@ export function ImportarDocumento({ onDone }: { onDone: () => void }) {
   const handleAddSelected = async () => {
     setSaving(true)
     try {
-      // 1. Programas (com saldo, replicando o EntryForm: entrada + ajuste de saldo)
+      // 1. Programas: o saldo extraído é o SALDO ATUAL do extrato — substitui
+      // (não soma). Com saldo 0/não informado, mantém o saldo atual.
+      let resolvedProgram: ProgramRecord | null = null
       for (const st of programs) {
         if (!st.selected) continue
         const { extracted } = st
         if (!extracted.name.trim()) continue
         let program = await findOrCreateProgram(extracted.name)
         if (!program) continue
-        const entry: Record<string, unknown> = {
-          program: program.id,
-          type: 'entrada',
-          description: 'Importado de um documento',
-          quantity: extracted.balance || 0,
-          date: new Date().toISOString().slice(0, 10) + ' 12:00:00.000Z',
-        }
         if (extracted.balance > 0) {
-          // Entrada de saldo com custo médio: mantém o custo existente (sem dado novo)
-          entry.cost_per_thousand = program.cost_per_thousand || 0
+          await pb.collection('program_entries').create({
+            program: program.id,
+            type: 'entrada',
+            description: 'Saldo importado de um documento',
+            quantity: extracted.balance,
+            cost_per_thousand: program.cost_per_thousand || 0,
+            date: new Date().toISOString().slice(0, 10) + ' 12:00:00.000Z',
+          })
         }
-        await pb.collection('program_entries').create(entry)
-        await pb.collection('programs').update(program.id, {
-          balance: (program.balance || 0) + (extracted.balance || 0),
-          ...(extracted.miles_expiry ? { miles_expiry: extracted.miles_expiry } : {}),
-          ...(extracted.elite_status ? { elite_status: extracted.elite_status } : {}),
-        })
-        program = { ...program, balance: (program.balance || 0) + (extracted.balance || 0) }
+        const patch: Record<string, unknown> = {}
+        if (extracted.balance > 0) patch.balance = extracted.balance
+        if (extracted.miles_expiry) patch.miles_expiry = extracted.miles_expiry
+        if (extracted.elite_status) patch.elite_status = extracted.elite_status
+        if (Object.keys(patch).length > 0) {
+          await pb.collection('programs').update(program.id, patch)
+        }
+        program = { ...program, ...patch } as ProgramRecord
+        resolvedProgram = program
       }
 
-      // 2. Viagens
+      // 2. Movimentações do extrato: uma program_entry por linha marcada.
+      // Se o saldo extraído veio informado, ele já é o resultado das
+      // movimentações (só grava as linhas); se não veio, aplica ao saldo atual.
+      const selectedMoves = movements.filter((m) => m.selected && m.extracted.description.trim())
+      if (resolvedProgram && selectedMoves.length > 0) {
+        const applyToBalance = (resolvedProgram.balance || 0) <= 0
+        let delta = 0
+        for (const mv of selectedMoves) {
+          const amount = mv.extracted.amount || 0
+          await pb.collection('program_entries').create({
+            program: resolvedProgram.id,
+            type: amount >= 0 ? 'entrada' : 'saida',
+            description: mv.extracted.description.trim(),
+            quantity: Math.abs(amount),
+            cost_per_thousand: resolvedProgram.cost_per_thousand || 0,
+            date: mv.extracted.date
+              ? `${mv.extracted.date} 12:00:00.000Z`
+              : new Date().toISOString().slice(0, 10) + ' 12:00:00.000Z',
+          })
+          delta += amount
+        }
+        if (applyToBalance && delta !== 0) {
+          await pb
+            .collection('programs')
+            .update(resolvedProgram.id, { balance: (resolvedProgram.balance || 0) + delta })
+          setExistingPrograms((prev) =>
+            prev.map((p) =>
+              p.id === resolvedProgram!.id
+                ? ({ ...p, balance: (p.balance || 0) + delta } as ProgramRecord)
+                : p,
+            ),
+          )
+        }
+      }
+
+      // 3. Viagens
       for (const st of trips) {
         if (!st.selected) continue
         const name = st.extracted.name.trim()
@@ -210,7 +275,7 @@ export function ImportarDocumento({ onDone }: { onDone: () => void }) {
         }
       }
 
-      // 3. Passagens
+      // 4. Passagens
       for (const st of flights) {
         if (!st.selected) continue
         const { extracted } = st
@@ -220,7 +285,6 @@ export function ImportarDocumento({ onDone }: { onDone: () => void }) {
         const route = `${origin} → ${destination}`
         const dateStr = extracted.datetime || ''
         const isoDate = dateStr ? `${dateStr.slice(0, 10)} 12:00:00.000Z` : ''
-        const depTime = dateStr.slice(11, 16) || undefined
         const miles = parseNumberInput(st.milheiro) || 0
 
         let programId = ''
@@ -256,26 +320,25 @@ export function ImportarDocumento({ onDone }: { onDone: () => void }) {
         await pb.collection('flights').create({
           route,
           airline: extracted.airline.trim() || undefined,
-          departure: isoDate || new Date().toISOString().slice(0, 10) + ' 12:00:00.000Date',
+          departure: isoDate || new Date().toISOString().slice(0, 10) + ' 12:00:00.000Z',
           payment_method: 'milhas',
           miles_used: miles,
           fees: 0,
           cash_amount: 0,
           reference_value: 0,
-          booking_code: undefined,
           status: 'confirmada',
           origin,
           destination,
           cabin: 'economica',
           roundtrip: false,
-          outbound_date: isoDate || new Date().toISOString().slice(0, 10) + ' 12:00:00.000Date',
+          outbound_date: isoDate || new Date().toISOString().slice(0, 10) + ' 12:00:00.000Z',
           passengers: extracted.passengers.join(', ') || undefined,
           issued_at: new Date().toISOString().slice(0, 10) + ' 12:00:00.000Z',
           trip: st.trip.trim() || undefined,
           ...(programId ? { program: programId, entry: entryId } : {}),
         })
 
-        // 4. Passageiros citados que ainda não existem viram cadastro
+        // 5. Passageiros citados que ainda não existem viram cadastro
         for (const p of extracted.passengers) {
           const name = p.trim()
           if (!name) continue
@@ -312,6 +375,7 @@ export function ImportarDocumento({ onDone }: { onDone: () => void }) {
   const selectedCount =
     flights.filter((f) => f.selected).length +
     programs.filter((p) => p.selected).length +
+    movements.filter((m) => m.selected).length +
     trips.filter((t) => t.selected).length
 
   return (
@@ -337,15 +401,7 @@ export function ImportarDocumento({ onDone }: { onDone: () => void }) {
               e.preventDefault()
               setDragOver(false)
               const dropped = e.dataTransfer.files?.[0]
-              if (dropped) {
-                const ok = /\.(pdf|jpe?g|png|webp)$/i.test(dropped.name)
-                if (ok) {
-                  setFile(dropped)
-                  setExtractError(null)
-                } else {
-                  setExtractError('Formato não suportado. Use PDF, JPG, PNG ou WebP.')
-                }
-              }
+              if (dropped) acceptFile(dropped)
             }}
             className={cn(
               'block cursor-pointer rounded-2xl border-2 border-dashed px-6 py-10 text-center transition-all',
@@ -360,10 +416,7 @@ export function ImportarDocumento({ onDone }: { onDone: () => void }) {
               className="hidden"
               onChange={(e) => {
                 const chosen = e.target.files?.[0]
-                if (chosen) {
-                  setFile(chosen)
-                  setExtractError(null)
-                }
+                if (chosen) acceptFile(chosen)
               }}
             />
             <UploadCloud className="w-8 h-8 mx-auto text-[#16418F] mb-3" />
@@ -374,6 +427,20 @@ export function ImportarDocumento({ onDone }: { onDone: () => void }) {
               ou clique para escolher · PDF, JPG, PNG ou WebP
             </p>
           </label>
+          {file && (
+            <div className="flex items-center justify-between gap-2 rounded-lg bg-[#F3EFE6] border border-[#E8E2D6] px-3 py-2">
+              <p className="font-mono text-xs text-[#23201A] break-all">
+                {file.name} · {(file.size / 1024).toFixed(0)} KB
+              </p>
+              <button
+                type="button"
+                onClick={() => setFile(null)}
+                className="text-xs font-semibold text-[#16418F] hover:underline shrink-0"
+              >
+                Tirar
+              </button>
+            </div>
+          )}
         </div>
 
         <div className="space-y-2">
@@ -394,24 +461,42 @@ export function ImportarDocumento({ onDone }: { onDone: () => void }) {
       <div className="flex items-start gap-3 rounded-xl border border-[#0E8FB8]/25 bg-[#0E8FB8]/5 px-4 py-3">
         <AlertTriangle className="w-4 h-4 text-[#0E8FB8] mt-0.5 shrink-0" />
         <p className="text-xs text-[#6E6A5E]">
-          O arquivo é lido no seu navegador e o conteúdo vai para o Claude só para extrair os dados.
-          Nada do documento é armazenado. Números de cartão, CPF e senhas são ignorados.
+          O arquivo é lido só para extrair os dados. Nada do documento é armazenado. Números de
+          cartão, CPF e senhas são ignorados.
         </p>
+      </div>
+
+      {/* BOTÃO PRINCIPAL — sempre visível com arquivo ou texto */}
+      <div className="flex flex-wrap items-center gap-3">
+        <Button
+          onClick={handleRead}
+          disabled={!canRead}
+          className="rounded-xl bg-[#0E6E54] hover:bg-[#0A5440] text-white font-semibold px-5"
+        >
+          {reading ? (
+            <>
+              <RefreshCw className="w-4 h-4 mr-2 animate-spin" /> Lendo...
+            </>
+          ) : (
+            'Ler informações'
+          )}
+        </Button>
+        {!canRead && !reading && (
+          <p className="text-xs text-[#6E6A5E]">Anexe um arquivo ou cole o texto do extrato.</p>
+        )}
       </div>
 
       {extractError && (
         <div className="flex items-start gap-3 rounded-xl border border-[#C4452F]/40 bg-[#C4452F]/10 px-4 py-3">
           <AlertTriangle className="w-4 h-4 text-[#C4452F] mt-0.5 shrink-0" />
-          <div className="flex-1 text-sm text-[#C4452F]">
-            <p className="font-semibold">{extractError}</p>
-          </div>
+          <p className="text-sm font-semibold text-[#C4452F] flex-1">{extractError}</p>
           <Button
             onClick={handleRead}
             size="sm"
             variant="outline"
             className="rounded-lg border-[#C4452F]/40 text-[#C4452F] hover:bg-[#C4452F]/10 shrink-0"
           >
-            <RefreshCw className="w-4 h-4 mr-1.5" /> Ler informações
+            <RefreshCw className="w-4 h-4 mr-1.5" /> Tentar de novo
           </Button>
         </div>
       )}
@@ -420,12 +505,13 @@ export function ImportarDocumento({ onDone }: { onDone: () => void }) {
       {result && (
         <div className="space-y-4">
           <h3 className="font-serif text-xl font-bold text-[#23201A]">Revise antes de adicionar</h3>
-          <p className="text-xs text-[#6E6A5E] font-mono bg-[#FAF7F0] border border-[#E8E2D6] rounded-xl p-3 whitespace-pre-wrap break-words">
-            {text}
-          </p>
           <p className="text-xs text-[#6E6A5E]">
-            Lido: {result.meta.pages} páginas · {result.meta.characters} caracteres ·{' '}
-            {result.meta.images} imagens enviadas
+            Lido: {result.meta.pages > 0 ? `${result.meta.pages} páginas · ` : ''}
+            {result.meta.characters} caracteres de texto
+            {result.meta.images > 0
+              ? ` · ${result.meta.images} imagem${result.meta.images > 1 ? 's' : ''} enviada${result.meta.images > 1 ? 's' : ''}`
+              : ''}
+            {result.meta.truncated ? ' · documento truncado' : ''}
           </p>
 
           {/* Programas */}
@@ -449,7 +535,17 @@ export function ImportarDocumento({ onDone }: { onDone: () => void }) {
                     <div className="flex-1">
                       <p className="text-sm font-semibold text-[#23201A]">
                         <Star className="w-4 h-4 inline text-[#0E8FB8] mr-1" />
-                        {st.extracted.name} · saldo {st.extracted.balance.toLocaleString('pt-BR')}
+                        {st.extracted.name} ·{' '}
+                        {st.extracted.balance > 0 ? (
+                          <>saldo {formatMiles(st.extracted.balance)}</>
+                        ) : (
+                          <>saldo não informado (mantém o atual)</>
+                        )}
+                        {st.extracted.miles_expiry
+                          ? ` · expira ${formatDateBR(st.extracted.miles_expiry)}`
+                          : ''}
+                        {st.extracted.elite_status ? ` · ${st.extracted.elite_status}` : ''}
+                        {movements.length > 0 ? ` · ${movements.length} movimentações` : ''}
                         {st.extracted.holder ? ` · titular: ${st.extracted.holder}` : ''}
                       </p>
                       <div className="grid gap-2 mt-2 md:grid-cols-2">
@@ -492,9 +588,86 @@ export function ImportarDocumento({ onDone }: { onDone: () => void }) {
                       </div>
                     </div>
                   </label>
+
+                  {/* Movimentações do extrato, ligadas a este programa */}
+                  {movements.length > 0 && (
+                    <div className="mt-3 border-t border-[#E8E2D6] pt-3">
+                      <button
+                        type="button"
+                        onClick={() => setMovesOpen((v) => !v)}
+                        className="flex items-center gap-1 text-xs font-semibold text-[#16418F] hover:underline"
+                      >
+                        {movesOpen ? (
+                          <ChevronDown className="w-3.5 h-3.5" />
+                        ) : (
+                          <ChevronRight className="w-3.5 h-3.5" />
+                        )}
+                        Ver movimentações ({movements.length})
+                      </button>
+                      {movesOpen && (
+                        <div className="mt-2 overflow-x-auto">
+                          <table className="w-full text-xs">
+                            <thead>
+                              <tr className="text-left text-[#6E6A5E] uppercase tracking-wider">
+                                <th className="py-1.5 pr-2 w-8"></th>
+                                <th className="py-1.5 pr-3 font-semibold">Data</th>
+                                <th className="py-1.5 pr-3 font-semibold">Descrição</th>
+                                <th className="py-1.5 font-semibold text-right">Valor</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {movements.map((mv, mi) => (
+                                <tr key={`m-${mi}`} className="border-t border-[#E8E2D6]/60">
+                                  <td className="py-1.5 pr-2">
+                                    <input
+                                      type="checkbox"
+                                      checked={mv.selected}
+                                      onChange={(e) =>
+                                        setMovements((prev) =>
+                                          prev.map((x, xi) =>
+                                            xi === mi ? { ...x, selected: e.target.checked } : x,
+                                          ),
+                                        )
+                                      }
+                                      className="w-3.5 h-3.5 accent-[#16418F]"
+                                    />
+                                  </td>
+                                  <td className="py-1.5 pr-3 text-[#23201A] whitespace-nowrap">
+                                    {mv.extracted.date ? formatDateBR(mv.extracted.date) : '—'}
+                                  </td>
+                                  <td className="py-1.5 pr-3 text-[#23201A]">
+                                    {mv.extracted.description}
+                                  </td>
+                                  <td
+                                    className={cn(
+                                      'py-1.5 text-right tabular-nums whitespace-nowrap',
+                                      mv.extracted.amount >= 0
+                                        ? 'text-[#0E6E54]'
+                                        : 'text-[#C4452F]',
+                                    )}
+                                  >
+                                    {mv.extracted.amount >= 0 ? '+' : '−'}{' '}
+                                    {formatMiles(Math.abs(mv.extracted.amount || 0))}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </Card>
               ))}
             </div>
+          )}
+
+          {/* Sem programa mas com movimentações: avisa que precisa de programa */}
+          {programs.length === 0 && movements.length > 0 && (
+            <p className="text-xs text-[#6E6A5E]">
+              {movements.length} movimentações extraídas, mas o documento não identificou o programa
+              — adicione um programa para gravá-las.
+            </p>
           )}
 
           {/* Passagens */}
