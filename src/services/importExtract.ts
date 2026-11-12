@@ -44,7 +44,7 @@ export interface ExtractResult {
 
 export interface ImportInput {
   text: string
-  file?: File
+  files?: File[]
   imageCount?: number
 }
 
@@ -56,12 +56,24 @@ export class ImportExtractError extends Error {
   }
 }
 
-/** Tipos de arquivo que a extração entende: PDF (texto) e imagens (visão). */
-export const ACCEPTED_MIME = ['image/jpeg', 'image/png', 'image/webp'] as const
+/** Tipos de arquivo que a extração entende: PDF/DOCX/XLSX (texto) e imagens (visão). */
+export const DOC_MIME = [
+  'application/pdf',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+] as const
 
-export const isImageFile = (file: File) => ACCEPTED_MIME.includes(file.type as never)
+export const IMAGE_MIME = ['image/jpeg', 'image/png', 'image/webp'] as const
 
-/** Converte a imagem escolhida em data URL (só em memória, nunca salva). */
+export const ACCEPTED_MIME: string[] = [...DOC_MIME, ...IMAGE_MIME]
+
+export const ACCEPTED_EXT = '.pdf,.docx,.xlsx,.pptx,.jpg,.jpeg,.png,.webp'
+
+export const isImageFile = (file: File) => IMAGE_MIME.includes(file.type as never)
+export const isDocFile = (file: File) => DOC_MIME.includes(file.type as never)
+
+/** Converte uma imagem em data URL (só em memória, nunca salva). */
 export const fileToDataUrl = (file: File): Promise<string> =>
   new Promise((resolve, reject) => {
     const reader = new FileReader()
@@ -70,43 +82,46 @@ export const fileToDataUrl = (file: File): Promise<string> =>
     reader.readAsDataURL(file)
   })
 
-/** Chama POST /backend/v1/import-extract (texto, PDF multipart e/ou imagens em data URL). */
+/**
+ * Chama POST /backend/v1/import-extract (multipart sempre):
+ * - PDF/DOCX/XLSX/PPTX no campo `files` — extração server-side via $documents;
+ * - imagens convertidas em data URL (só em memória) no campo `images` — visão;
+ * - texto colado no campo `text`.
+ * `imageCount` só informa a meta "N imagens enviadas" quando vem do cliente.
+ */
 export async function extractFromDocument({
   text,
-  file,
+  files = [],
   imageCount = 0,
 }: ImportInput): Promise<ExtractResult> {
-  const isImage = file ? isImageFile(file) : false
-  const dataUrl = isImage ? await fileToDataUrl(file) : ''
-  if (file && isImage && !dataUrl) {
-    throw new ImportExtractError('Não foi possível ler a imagem enviada.', 422)
+  if (text.trim().length === 0 && files.length === 0) {
+    throw new ImportExtractError('Anexe um arquivo ou cole o texto do extrato.', 400)
+  }
+
+  const docs = files.filter((f) => !isImageFile(f))
+  const images = files.filter(isImageFile)
+
+  // Imagens viram data URL aqui (nunca são salvas), para o hook montar a visão.
+  const dataUrls: string[] = []
+  for (const img of images) {
+    if (img.size > 5 * 1024 * 1024) {
+      throw new ImportExtractError(`Imagem ${img.name} muito grande (máx. 5 MB).`, 413)
+    }
+    dataUrls.push(await fileToDataUrl(img))
   }
 
   let res: Response
   try {
-    if (file && !isImage) {
-      const form = new FormData()
-      form.append('file', file)
-      if (text.trim()) form.append('text', text)
-      res = await fetch(`${import.meta.env.VITE_POCKETBASE_URL}/backend/v1/import-extract`, {
-        method: 'POST',
-        headers: { Authorization: pb.authStore.token },
-        body: form,
-      })
-    } else {
-      res = await fetch(`${import.meta.env.VITE_POCKETBASE_URL}/backend/v1/import-extract`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: pb.authStore.token,
-        },
-        body: JSON.stringify({
-          text,
-          image: dataUrl || undefined,
-          image_count: imageCount,
-        }),
-      })
-    }
+    const form = new FormData()
+    if (text.trim()) form.append('text', text)
+    for (const d of docs) form.append('files', d, d.name)
+    if (dataUrls.length > 0) form.append('images', JSON.stringify(dataUrls))
+    form.append('image_count', String(imageCount > 0 ? imageCount : dataUrls.length))
+    res = await fetch(`${import.meta.env.VITE_POCKETBASE_URL}/backend/v1/import-extract`, {
+      method: 'POST',
+      headers: { Authorization: pb.authStore.token },
+      body: form,
+    })
   } catch {
     throw new ImportExtractError(
       'Não foi possível conectar ao servidor. Verifique a conexão e tente novamente.',

@@ -1,9 +1,10 @@
 // POST /backend/v1/import-extract — extrai dados estruturados de extratos/e-mails
 // de programas de milhas via o agente nativo "import-extrator".
-// Entradas: { text } (JSON) ou multipart com PDF (extraído server-side via
-// $documents) e/ou { image } (data URL de JPG/PNG/WebP lido no navegador, para
-// visão). NADA é armazenado: sem conversation_id (conversa descartável criada
-// sob o usuário da requisição), sem logs de conteúdo, sem collection de arquivos.
+// Entradas: { text, images: [dataURL] } (JSON) ou multipart com PDF/DOCX/XLSX
+// (extração server-side via $documents) e o campo `images` com a lista JSON de
+// data URLs de JPG/PNG/WebP (visão, várias imagens por vez). NADA é armazenado:
+// sem conversation_id (conversa descartável), sem logs de conteúdo e sem
+// collection de arquivos.
 routerAdd(
   'POST',
   '/backend/v1/import-extract',
@@ -22,53 +23,84 @@ routerAdd(
       return e.forbiddenError('Acesso restrito ao proprietário do aplicativo.')
     }
 
+    const MAX_DATAURL = 8 * 1024 * 1024
+    const MAX_IMAGES = 8
+
     const contentType = String(e.request.header.get('Content-Type') || '')
     const isMultipart = contentType.toLowerCase().indexOf('multipart/form-data') === 0
     let text = ''
-    let image = ''
-    let nImages = 0
+    let images = []
     let nPages = 0
     let docTruncated = false
 
-    if (isMultipart) {
-      // PDF/DOCX/XLSX/PPTX em multipart: extração server-side ($documents),
-      // nunca no navegador. O arquivo é lido em memória e descartado.
-      const files = e.findUploadedFiles('file')
-      if (files && files.length > 0) {
-        try {
-          const { markdown, truncated } = $documents.toMarkdown({ file: files[0] })
-          text = markdown || ''
-          docTruncated = !!truncated
-        } catch (err) {
-          if (err && (err.status === 422 || err.status === 413)) {
-            return e.json(err.status, { error: err.message })
+    try {
+      if (isMultipart) {
+        // PDF/DOCX/XLSX/PPTX em multipart: extração server-side ($documents),
+        // nunca no navegador. O arquivo é lido em memória e descartado.
+        const uploaded = [].concat(e.findUploadedFiles('file'), e.findUploadedFiles('files'))
+        const docTexts = []
+        for (let i = 0; i < uploaded.length; i++) {
+          try {
+            const res = $documents.toMarkdown({ file: uploaded[i] })
+            if (res && res.markdown) docTexts.push(res.markdown)
+            if (res && res.truncated) docTruncated = true
+          } catch (err) {
+            // Arquivo não documentável (ex.: imagem): ignora — imagens chegam
+            // como data URL no campo `images`.
           }
-          return e.json(500, { error: 'Não foi possível ler o documento enviado.' })
+        }
+        text = docTexts.join('\n\n')
+
+        const form = e.requestInfo().body || {}
+        const formText = typeof form.text === 'string' ? form.text.trim() : ''
+        if (formText) text = text ? text + '\n\n' + formText : formText
+        const rawImages = typeof form.images === 'string' ? form.images : ''
+        if (rawImages.trim()) {
+          try {
+            const parsed = JSON.parse(rawImages)
+            const list = Array.isArray(parsed) ? parsed : []
+            for (let i = 0; i < list.length; i++) {
+              const img = list[i]
+              if (typeof img !== 'string' || img.indexOf('data:image/') !== 0) continue
+              if (img.length > MAX_DATAURL) {
+                return e.json(413, {
+                  error: 'Imagem muito grande. Envie imagens de até 6 MB.',
+                })
+              }
+              images.push(img)
+              if (images.length >= MAX_IMAGES) break
+            }
+          } catch (_) {
+            // campo images malformado: segue sem imagens
+          }
+        }
+        const pc = Number(form.page_count)
+        if (!isNaN(pc)) nPages = pc
+      } else {
+        const body = e.requestInfo().body || {}
+        text = typeof body.text === 'string' ? body.text.trim() : ''
+        // Formato novo: lista de data URLs; `image` único fica por compatibilidade.
+        const rawList = body.images !== undefined ? body.images : body.image
+        const list = Array.isArray(rawList)
+          ? rawList
+          : typeof rawList === 'string' && rawList
+            ? [rawList]
+            : []
+        for (let i = 0; i < list.length; i++) {
+          const img = list[i]
+          if (typeof img !== 'string' || img.indexOf('data:image/') !== 0) continue
+          if (img.length > MAX_DATAURL) {
+            return e.json(413, { error: 'Imagem muito grande. Envie imagens de até 6 MB.' })
+          }
+          images.push(img)
+          if (images.length >= MAX_IMAGES) break
         }
       }
-      const form = e.requestInfo().body || {}
-      const formText = typeof form.text === 'string' ? form.text.trim() : ''
-      if (formText) text = text ? text + '\n\n' + formText : formText
-      const fc = Number(form.page_count)
-      if (!isNaN(fc)) nPages = fc
-      const ic = Number(form.image_count)
-      if (!isNaN(ic)) nImages = ic
-    } else {
-      const body = e.requestInfo().body || {}
-      text = typeof body.text === 'string' ? body.text.trim() : ''
-      if (typeof body.image === 'string' && body.image.indexOf('data:image/') === 0) {
-        const MAX_DATAURL = 8 * 1024 * 1024
-        if (body.image.length > MAX_DATAURL) {
-          return e.json(413, { error: 'Imagem muito grande. Envie um arquivo de até 6 MB.' })
-        }
-        image = body.image
-        nImages = 1
-      }
-      const bc = Number(body.image_count)
-      if (!isNaN(bc) && bc > 0) nImages = bc
+    } catch (err) {
+      throw err
     }
 
-    if (!text && !image) {
+    if (!text && images.length === 0) {
       return e.badRequestError('Envie um arquivo com texto ou cole o conteúdo do extrato.')
     }
     if (text.length > 200000) {
@@ -76,16 +108,23 @@ routerAdd(
       docTruncated = true
     }
 
-    // Mensagem: quando há imagem, manda um array de partes (texto + image_url
-    // data URL) no formato OpenAI; quando não, manda o texto puro.
+    // Mensagem: com imagens, array de partes (texto + image_url data URLs);
+    // sem imagens, o texto puro.
     let message = text
-    if (image) {
-      const parts = []
-      parts.push({
-        type: 'text',
-        text: (text ? text + '\n\n' : '') + 'Extraia os dados desta imagem conforme as instruções.',
-      })
-      parts.push({ type: 'image_url', image_url: { url: image } })
+    if (images.length > 0) {
+      const parts = [
+        {
+          type: 'text',
+          text:
+            (text ? text + '\n\n' : '') +
+            'Extraia os dados destas ' +
+            images.length +
+            ' imagem(ns) conforme as instruções.',
+        },
+      ]
+      for (let i = 0; i < images.length; i++) {
+        parts.push({ type: 'image_url', image_url: { url: images[i] } })
+      }
       message = parts
     }
 
@@ -149,7 +188,7 @@ routerAdd(
         meta: {
           pages: nPages,
           characters: text.length,
-          images: nImages,
+          images: images.length,
           truncated: docTruncated,
         },
       })

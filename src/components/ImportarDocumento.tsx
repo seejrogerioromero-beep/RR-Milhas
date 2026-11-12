@@ -8,6 +8,7 @@ import {
   Map as MapIcon,
   ChevronDown,
   ChevronRight,
+  X,
 } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -32,7 +33,8 @@ import {
 import { formatDateBR, formatDateTimeBR, formatMiles, parseNumberInput } from '@/lib/miles'
 import { isForbiddenProgramName } from '@/lib/programCatalog'
 
-const ACCEPTED = '.pdf,.jpg,.jpeg,.png,.webp'
+const ACCEPTED = '.pdf,.docx,.xlsx,.pptx,.jpg,.jpeg,.png,.webp'
+const MAX_FILES = 8
 
 interface ReviewFlightState {
   extracted: ExtractedFlight
@@ -68,7 +70,8 @@ const FORMAT_HINT =
 export function ImportarDocumento({ onDone }: { onDone: () => void }) {
   const { toast } = useToast()
   const [text, setText] = useState('')
-  const [file, setFile] = useState<File | null>(null)
+  const [files, setFiles] = useState<File[]>([])
+  const [movesProgramId, setMovesProgramId] = useState('')
   const [dragOver, setDragOver] = useState(false)
   const [reading, setReading] = useState(false)
   const [extractError, setExtractError] = useState<string | null>(null)
@@ -99,20 +102,24 @@ export function ImportarDocumento({ onDone }: { onDone: () => void }) {
       .catch(() => {})
   }, [])
 
-  const canRead = (text.trim().length >= 10 || file != null) && !reading
+  const canRead = (text.trim().length >= 10 || files.length > 0) && !reading
 
-  const acceptFile = (chosen: File) => {
-    const ok = /\.(pdf|jpe?g|png|webp)$/i.test(chosen.name)
-    if (ok) {
-      setFile(chosen)
+  const acceptFiles = (chosen: File[]) => {
+    const ok = chosen.filter((f) => /\.(pdf|docx|xlsx|pptx|jpe?g|png|webp)$/i.test(f.name))
+    const bad = chosen.length - ok.length
+    if (ok.length > 0) {
+      setFiles((prev) => [...prev, ...ok].slice(0, MAX_FILES))
       setExtractError(null)
       setResult(null)
       setFlights([])
       setPrograms([])
       setMovements([])
       setTrips([])
-    } else {
-      setExtractError('Formato não suportado. Use PDF, JPG, PNG ou WebP.')
+    }
+    if (bad > 0) {
+      setExtractError(
+        `${bad} arquivo${bad > 1 ? 's' : ''} com formato não suportado. Use PDF, DOCX, XLSX, JPG, PNG ou WebP.`,
+      )
     }
   }
 
@@ -128,8 +135,8 @@ export function ImportarDocumento({ onDone }: { onDone: () => void }) {
     try {
       const res = await extractFromDocument({
         text: text.trim(),
-        file: file ?? undefined,
-        imageCount: file && isImageFile(file) ? 1 : 0,
+        files,
+        imageCount: files.filter(isImageFile).length,
       })
       setResult(res)
       setFlights(
@@ -167,7 +174,8 @@ export function ImportarDocumento({ onDone }: { onDone: () => void }) {
 
   const resetAll = () => {
     setText('')
-    setFile(null)
+    setFiles([])
+    setMovesProgramId('')
     setResult(null)
     setFlights([])
     setPrograms([])
@@ -232,6 +240,9 @@ export function ImportarDocumento({ onDone }: { onDone: () => void }) {
       // Se o saldo extraído veio informado, ele já é o resultado das
       // movimentações (só grava as linhas); se não veio, aplica ao saldo atual.
       const selectedMoves = movements.filter((m) => m.selected && m.extracted.description.trim())
+      if (!resolvedProgram && selectedMoves.length > 0 && movesProgramId) {
+        resolvedProgram = existingPrograms.find((p) => p.id === movesProgramId) || null
+      }
       if (resolvedProgram && selectedMoves.length > 0) {
         const applyToBalance = (resolvedProgram.balance || 0) <= 0
         let delta = 0
@@ -280,6 +291,9 @@ export function ImportarDocumento({ onDone }: { onDone: () => void }) {
         if (!st.selected) continue
         const { extracted } = st
         if (!extracted.origin || !extracted.destination) continue
+        const chosenPassengers = extracted.passengers.filter(
+          (_, pi) => st.passengerChecks[pi] ?? true,
+        )
         const origin = extracted.origin.toUpperCase()
         const destination = extracted.destination.toUpperCase()
         const route = `${origin} → ${destination}`
@@ -332,14 +346,14 @@ export function ImportarDocumento({ onDone }: { onDone: () => void }) {
           cabin: 'economica',
           roundtrip: false,
           outbound_date: isoDate || new Date().toISOString().slice(0, 10) + ' 12:00:00.000Z',
-          passengers: extracted.passengers.join(', ') || undefined,
+          passengers: chosenPassengers.join(', ') || undefined,
           issued_at: new Date().toISOString().slice(0, 10) + ' 12:00:00.000Z',
           trip: st.trip.trim() || undefined,
           ...(programId ? { program: programId, entry: entryId } : {}),
         })
 
-        // 5. Passageiros citados que ainda não existem viram cadastro
-        for (const p of extracted.passengers) {
+        // 5. Passageiros marcados que ainda não existem viram cadastro
+        for (const p of chosenPassengers) {
           const name = p.trim()
           if (!name) continue
           const exists = existingPassengers.some(
@@ -400,8 +414,8 @@ export function ImportarDocumento({ onDone }: { onDone: () => void }) {
             onDrop={(e) => {
               e.preventDefault()
               setDragOver(false)
-              const dropped = e.dataTransfer.files?.[0]
-              if (dropped) acceptFile(dropped)
+              const dropped = Array.from(e.dataTransfer.files || [])
+              if (dropped.length > 0) acceptFiles(dropped)
             }}
             className={cn(
               'block cursor-pointer rounded-2xl border-2 border-dashed px-6 py-10 text-center transition-all',
@@ -415,30 +429,41 @@ export function ImportarDocumento({ onDone }: { onDone: () => void }) {
               accept={ACCEPTED}
               className="hidden"
               onChange={(e) => {
-                const chosen = e.target.files?.[0]
-                if (chosen) acceptFile(chosen)
+                const chosen = Array.from(e.target.files || [])
+                if (chosen.length > 0) acceptFiles(chosen)
+                e.target.value = ''
               }}
+              multiple
             />
             <UploadCloud className="w-8 h-8 mx-auto text-[#16418F] mb-3" />
             <p className="text-sm font-bold text-[#23201A]">
-              {file ? file.name : 'Arraste o arquivo aqui'}
+              {files.length > 0
+                ? `${files.length} arquivo${files.length > 1 ? 's' : ''} anexado${files.length > 1 ? 's' : ''}`
+                : 'Arraste os arquivos aqui'}
             </p>
             <p className="text-xs text-[#6E6A5E] mt-1">
-              ou clique para escolher · PDF, JPG, PNG ou WebP
+              ou clique para escolher · PDF, DOCX, XLSX, JPG, PNG ou WebP
             </p>
           </label>
-          {file && (
-            <div className="flex items-center justify-between gap-2 rounded-lg bg-[#F3EFE6] border border-[#E8E2D6] px-3 py-2">
-              <p className="font-mono text-xs text-[#23201A] break-all">
-                {file.name} · {(file.size / 1024).toFixed(0)} KB
-              </p>
-              <button
-                type="button"
-                onClick={() => setFile(null)}
-                className="text-xs font-semibold text-[#16418F] hover:underline shrink-0"
-              >
-                Tirar
-              </button>
+          {files.length > 0 && (
+            <div className="space-y-1.5">
+              {files.map((f, fi) => (
+                <div
+                  key={`${f.name}-${fi}`}
+                  className="flex items-center justify-between gap-2 rounded-lg bg-[#F3EFE6] border border-[#E8E2D6] px-3 py-2"
+                >
+                  <p className="font-mono text-xs text-[#23201A] break-all">
+                    {f.name} · {(f.size / 1024).toFixed(0)} KB
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setFiles((prev) => prev.filter((_, i) => i !== fi))}
+                    className="flex items-center gap-1 text-xs font-semibold text-[#16418F] hover:underline shrink-0"
+                  >
+                    <X className="w-3.5 h-3.5" /> Tirar
+                  </button>
+                </div>
+              ))}
             </div>
           )}
         </div>
@@ -662,12 +687,26 @@ export function ImportarDocumento({ onDone }: { onDone: () => void }) {
             </div>
           )}
 
-          {/* Sem programa mas com movimentações: avisa que precisa de programa */}
+          {/* Sem programa extraído mas com movimentações: escolhe em qual extrato gravar */}
           {programs.length === 0 && movements.length > 0 && (
-            <p className="text-xs text-[#6E6A5E]">
-              {movements.length} movimentações extraídas, mas o documento não identificou o programa
-              — adicione um programa para gravá-las.
-            </p>
+            <div className="rounded-xl border border-[#E8E2D6] bg-[#FAF7F0]/60 p-3 space-y-2">
+              <p className="text-xs text-[#6E6A5E]">
+                {movements.length} movimentações extraídas, mas o documento não identificou o
+                programa — escolha em qual extrato gravá-las:
+              </p>
+              <select
+                value={movesProgramId}
+                onChange={(e) => setMovesProgramId(e.target.value)}
+                className="rrmilhas-input w-full h-10 px-3 text-sm text-[#23201A] bg-white"
+              >
+                <option value="">Selecione o programa</option>
+                {existingPrograms.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name} — {formatMiles(p.balance || 0)} milhas
+                  </option>
+                ))}
+              </select>
+            </div>
           )}
 
           {/* Passagens */}
