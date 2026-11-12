@@ -10,6 +10,7 @@ import {
   ArrowLeftRight,
   Users,
   CreditCard,
+  FileUp,
 } from 'lucide-react'
 import { PageContainer as Layout } from '@/components/Layout'
 import { Card } from '@/components/ui/card'
@@ -23,15 +24,17 @@ import { Sheet } from '@/components/Sheet'
 import { EntryForm } from '@/components/ProgramStatement'
 import { TransferTab } from '@/components/TransferTab'
 import { ClubesTab, CartoesTab } from '@/components/ClubesCartoesTabs'
+import { ImportarDocumento } from '@/components/ImportarDocumento'
 import { cn } from '@/lib/utils'
 
-type Tab = 'lancar' | 'transferir' | 'clubes' | 'cartoes'
+type Tab = 'lancar' | 'transferir' | 'clubes' | 'cartoes' | 'importar'
 
 const TABS: { id: Tab; label: string; icon: typeof NotebookText }[] = [
   { id: 'lancar', label: 'Lançar', icon: NotebookText },
   { id: 'transferir', label: 'Transferir', icon: ArrowLeftRight },
   { id: 'clubes', label: 'Clubes', icon: Users },
   { id: 'cartoes', label: 'Cartões', icon: CreditCard },
+  { id: 'importar', label: 'Importar', icon: FileUp },
 ]
 
 /** Lançamentos: entradas, saídas, transferências entre programas, clubes e cartões. */
@@ -333,6 +336,8 @@ export default function Lancamentos() {
         {tab === 'clubes' && <ClubesTab programs={programs} onChanged={reload} />}
 
         {tab === 'cartoes' && <CartoesTab programs={programs} onChanged={reload} />}
+
+        {tab === 'importar' && <ImportarDocumento onDone={reload} />}
 
         {/* Novo lançamento: escolhe o programa e reaproveita o formulário do extrato */}
         <Sheet open={sheetOpen} onClose={() => setSheetOpen(false)} title="Novo lançamento">
