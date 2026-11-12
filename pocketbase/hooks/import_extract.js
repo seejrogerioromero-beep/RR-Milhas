@@ -37,8 +37,21 @@ routerAdd(
       if (isMultipart) {
         // PDF/DOCX/XLSX/PPTX em multipart: extração server-side ($documents),
         // nunca no navegador. O arquivo é lido em memória e descartado.
-        const uploaded = [].concat(e.findUploadedFiles('file'), e.findUploadedFiles('files'))
+        // findUploadedFiles LANÇA "http: no such file" quando o campo não veio;
+        // por isso cada nome de campo é tentado em try/catch separado.
+        const uploaded = []
+        try {
+          const a = e.findUploadedFiles('files')
+          for (let i = 0; i < a.length; i++) uploaded.push(a[i])
+        } catch (_) {}
+        try {
+          const b = e.findUploadedFiles('file')
+          for (let i = 0; i < b.length; i++) uploaded.push(b[i])
+        } catch (_) {}
+
         const docTexts = []
+        let docError = ''
+        let docErrorStatus = 0
         for (let i = 0; i < uploaded.length; i++) {
           try {
             const res = $documents.toMarkdown({ file: uploaded[i] })
@@ -46,10 +59,39 @@ routerAdd(
             if (res && res.truncated) docTruncated = true
           } catch (err) {
             // Arquivo não documentável (ex.: imagem): ignora — imagens chegam
-            // como data URL no campo `images`.
+            // como data URL no campo `images`. Documento com problema real
+            // (422 = sem texto selecionável/ilegível, 413 = grande demais):
+            // guarda o motivo para responder com a causa verdadeira.
+            const st = (err && err.status) || 0
+            if (!docError && (st === 422 || st === 413)) {
+              docError = String((err && err.message) || '')
+              docErrorStatus = st
+            } else if (!docError) {
+              docError = 'internal'
+              docErrorStatus = 500
+            }
           }
         }
         text = docTexts.join('\n\n')
+
+        if (!text && uploaded.length > 0) {
+          if (docErrorStatus === 413) {
+            return e.json(413, {
+              error: 'O arquivo é grande demais para leitura (limite de 10 MB por documento).',
+            })
+          }
+          if (docErrorStatus === 422 && docError) {
+            return e.json(422, {
+              error:
+                docError +
+                ' Se o PDF for digitalizado (só imagem, sem texto selecionável), esta leitura não consegue extrair os dados — abra o PDF, copie o texto e cole no campo de texto.',
+            })
+          }
+          return e.json(422, {
+            error:
+              'Não encontrei texto legível neste arquivo. Envie um PDF/DOCX/XLSX com texto selecionável ou cole o conteúdo do extrato no campo de texto.',
+          })
+        }
 
         const form = e.requestInfo().body || {}
         const formText = typeof form.text === 'string' ? form.text.trim() : ''
