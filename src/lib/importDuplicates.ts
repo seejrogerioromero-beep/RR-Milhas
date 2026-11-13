@@ -55,9 +55,16 @@ export function findDupProgram(
  */
 export function findDupMovement(
   m: ExtractedMovement,
-  existing: { id: string; program: string; date: string; quantity: number; type: string }[],
+  existing: {
+    id: string
+    program: string
+    date: string
+    quantity: number
+    type: string
+    description: string
+  }[],
   programId: string,
-): { id: string } | null {
+): { id: string; description: string } | null {
   const d = onlyDate(m.date)
   const q = Math.abs(m.amount || 0)
   if (!d || !q) return null

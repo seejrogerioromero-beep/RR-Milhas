@@ -39,6 +39,7 @@ import {
   DeleteExistingPanel,
   DuplicateDupRow,
   MovementRow,
+  PassengersSection,
   type ReviewPassengerState,
 } from '@/components/import/ImportReviewParts'
 import {
@@ -56,7 +57,6 @@ import {
   normalize,
   replaceWouldChangeFlight,
   replaceWouldChangeHotel,
-  replaceWouldChangePassenger,
   replaceWouldChangeProgram,
   type DupAction,
   type DupInfo,
