@@ -32,8 +32,12 @@ onMailerRecordPasswordResetSend((e) => {
     return
   }
 
-  const SITE_URL = $os.getenv('SITE_URL') || ''
-  const baseUrl = SITE_URL.replace(/\/+$/, '')
+  // SITE_URL pode estar vazio em runtime — nesse caso NUNCA devemos cair no
+  // window.location do backend (não serve o frontend: dá 404 no app).
+  // Fallback fixo para o domínio do frontend (produção).
+  const FRONTEND_URL = 'https://aplicativo-pessoal-seguro-389ab.goskip.app'
+  const SITE_URL = String($os.getenv('SITE_URL') || '')
+  const baseUrl = (SITE_URL.trim() !== '' ? SITE_URL : FRONTEND_URL).replace(/\/+$/, '')
   const resetLink = baseUrl + '/redefinir-senha?token=' + encodeURIComponent(token)
 
   const subject = 'Redefinição de senha — RRMILHAS'
