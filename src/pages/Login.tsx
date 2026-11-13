@@ -10,8 +10,9 @@ import { Label } from '@/components/ui/label'
 export default function Login() {
   const { login } = useAuth()
   const navigate = useNavigate()
-  const [email, setEmail] = useState('seej.rogerio.romero@gmail.com')
-  const [password, setPassword] = useState('Skip@Pass')
+  // Campos iniciam VAZIOS — nunca pré-preencher credenciais (falha de segurança).
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [generalError, setGeneralError] = useState<string | null>(null)
