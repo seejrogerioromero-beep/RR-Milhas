@@ -66,6 +66,8 @@ export interface ExtractMeta {
   characters: number
   images: number
   truncated: boolean
+  /** PDF digitalizado (só imagem) lido pelo agente como visão. */
+  scanned_pdf?: boolean
 }
 
 export interface ExtractResult {

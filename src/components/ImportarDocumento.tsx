@@ -808,10 +808,11 @@ export function ImportarDocumento({ onDone }: { onDone: () => void }) {
           <h3 className="font-serif text-xl font-bold text-[#23201A]">Revise antes de adicionar</h3>
           <p className="text-xs text-[#6E6A5E]">
             Lido: {result.meta.pages > 0 ? `${result.meta.pages} páginas · ` : ''}
-            {result.meta.characters} caracteres de texto
+            {result.meta.characters > 0 ? `${result.meta.characters} caracteres de texto` : ''}
             {result.meta.images > 0
               ? ` · ${result.meta.images} imagem${result.meta.images > 1 ? 's' : ''} enviada${result.meta.images > 1 ? 's' : ''}`
               : ''}
+            {result.meta.scanned_pdf ? ' · PDF digitalizado (lido como imagem)' : ''}
             {result.meta.truncated ? ' · documento truncado' : ''}
           </p>
 

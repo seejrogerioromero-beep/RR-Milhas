@@ -25,6 +25,10 @@ routerAdd(
 
     const MAX_DATAURL = 8 * 1024 * 1024
     const MAX_IMAGES = 8
+    // Orientação para PDF digitalizado (só imagem, sem texto selecionável) que
+    // nem o agente multimodal conseguiu ler. Sem jargão (nada de OCR/anydoc).
+    const SCANNED_PDF_HINT =
+      'Este PDF é digitalizado (só imagem). Duas opções: tire prints das páginas e envie como JPG/PNG (a leitura entende imagens), ou abra o PDF, copie o texto e cole no campo ao lado.'
 
     const contentType = String(e.request.header.get('Content-Type') || '')
     const isMultipart = contentType.toLowerCase().indexOf('multipart/form-data') === 0
@@ -32,6 +36,10 @@ routerAdd(
     let images = []
     let nPages = 0
     let docTruncated = false
+    // PDF digitalizado (só imagem): vira uma parte `file` (data URL
+    // application/pdf) enviada ao agente multimodal junto das imagens.
+    let pdfPart = null
+    let scannedPdf = false
 
     try {
       if (isMultipart) {
@@ -80,12 +88,74 @@ routerAdd(
               error: 'O arquivo é grande demais para leitura (limite de 10 MB por documento).',
             })
           }
-          if (docErrorStatus === 422 && docError) {
-            return e.json(422, {
-              error:
-                docError +
-                ' Se o PDF for digitalizado (só imagem, sem texto selecionável), esta leitura não consegue extrair os dados — abra o PDF, copie o texto e cole no campo de texto.',
-            })
+          const PDF_IMGBASED = 'PDF has no extractable text (ImageBased'
+          const isScannedPdf = docErrorStatus === 422 && docError.indexOf(PDF_IMGBASED) >= 0
+          if (docErrorStatus === 422 && docError && !isScannedPdf) {
+            // 422 que não é "só imagem": motivo real (ex. DOCX ilegível).
+            return e.json(422, { error: docError })
+          }
+          if (isScannedPdf) {
+            // PDF digitalizado (só imagem, sem texto selecionável): manda o PDF
+            // cru ao agente multimodal como parte `file` (data URL
+            // application/pdf) — sem OCR e sem rasterizar. O fluxo segue o
+            // MESMO do texto/imagens (normalização + duplicate_of). Se o agente
+            // não conseguir ler o PDF, o catch no final responde com a
+            // orientação (SCANNED_PDF_HINT: prints JPG/PNG ou colar texto).
+            for (let i = 0; i < uploaded.length && !pdfPart; i++) {
+              const f = uploaded[i]
+              const fname = String(f.name || 'documento.pdf')
+              if (fname.toLowerCase().indexOf('.pdf') !== fname.length - 4) continue
+              let bytes = []
+              try {
+                const reader = f.reader.open()
+                bytes = toBytes(reader, 11 * 1024 * 1024)
+                try {
+                  reader.close()
+                } catch (_) {}
+              } catch (_) {}
+              if (bytes.length === 0 || bytes.length > MAX_DATAURL) continue
+              const B64C = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
+              let out = ''
+              const n = bytes.length
+              let k = 0
+              while (k + 3 <= n) {
+                const b0 = bytes[k]
+                const b1 = bytes[k + 1]
+                const b2 = bytes[k + 2]
+                out +=
+                  B64C.charAt(b0 >> 2) +
+                  B64C.charAt(((b0 & 3) << 4) | (b1 >> 4)) +
+                  B64C.charAt(((b1 & 15) << 2) | (b2 >> 6)) +
+                  B64C.charAt(b2 & 63)
+                k += 3
+              }
+              const rem = n - k
+              if (rem === 1) {
+                out += B64C.charAt(b0 >> 2) + B64C.charAt(b0 & 3) + '=='
+              } else if (rem === 2) {
+                const b0 = bytes[k]
+                const b1 = bytes[k + 1]
+                out +=
+                  B64C.charAt(b0 >> 2) +
+                  B64C.charAt(((b0 & 3) << 4) | (b1 >> 4)) +
+                  B64C.charAt((b1 & 15) << 2) +
+                  '='
+              }
+              pdfPart = {
+                type: 'file',
+                file: {
+                  filename: fname,
+                  file_data: 'data:application/pdf;base64,' + out,
+                },
+              }
+              const pm = docError.match(/(\d+)\s*pages?/)
+              pdfPages = pm ? Number(pm[1]) : 0
+              scannedPdf = true
+            }
+            // Sem data URL possível (ex. PDF > 6 MB): orienta logo.
+            if (!pdfPart) {
+              return e.json(422, { error: SCANNED_PDF_HINT })
+            }
           }
           return e.json(422, {
             error:
@@ -142,7 +212,7 @@ routerAdd(
       throw err
     }
 
-    if (!text && images.length === 0) {
+    if (!text && images.length === 0 && !pdfPart) {
       return e.badRequestError('Envie um arquivo com texto ou cole o conteúdo do extrato.')
     }
     if (text.length > 200000) {
@@ -204,22 +274,27 @@ routerAdd(
       known = ''
     }
 
-    // Mensagem: com imagens, array de partes (texto + image_url data URLs);
-    // sem imagens, o texto puro. O resumo do que já está cadastrado entra no
-    // prompt para o agente sinalizar duplicidade (duplicate_of).
+    // Mensagem: com imagens e/ou PDF digitalizado, array de partes (texto +
+    // file/image_url data URLs); sem elas, o texto puro. O resumo do que já
+    // está cadastrado entra no prompt para o agente sinalizar duplicidade
+    // (duplicate_of).
     let message = text ? known + text : known
-    if (!message && images.length > 0) message = ''
-    if (images.length > 0) {
+    if (pdfPart || images.length > 0) {
+      let instruction = ''
+      if (pdfPart) {
+        instruction =
+          'Este PDF é digitalizado (só imagem). Leia o texto visível nas páginas dele e extraia os dados conforme as instruções.'
+      } else {
+        instruction =
+          'Extraia os dados destas ' + images.length + ' imagem(ns) conforme as instruções.'
+      }
       const parts = [
         {
           type: 'text',
-          text:
-            (message ? message + '\n\n' : '') +
-            'Extraia os dados destas ' +
-            images.length +
-            ' imagem(ns) conforme as instruções.',
+          text: (message ? message + '\n\n' : '') + instruction,
         },
       ]
+      if (pdfPart) parts.push(pdfPart)
       for (let i = 0; i < images.length; i++) {
         parts.push({ type: 'image_url', image_url: { url: images[i] } })
       }
@@ -365,9 +440,15 @@ routerAdd(
           characters: text.length,
           images: images.length,
           truncated: docTruncated,
+          scanned_pdf: scannedPdf,
         },
       })
     } catch (err) {
+      if (scannedPdf) {
+        // O agente não conseguiu ler o PDF digitalizado: orienta o caminho que
+        // funciona (prints JPG/PNG ou colar o texto) — sem jargão.
+        return e.json(422, { error: SCANNED_PDF_HINT })
+      }
       if (err instanceof SkipAiConfigError) {
         return e.json(503, {
           error: 'O serviço de leitura por IA está temporariamente indisponível.',
