@@ -7,24 +7,58 @@ export interface ExtractedProgram {
   miles_expiry: string
   elite_status: string
   holder: string
+  duplicate_of: string
 }
 
 export interface ExtractedMovement {
   date: string
   description: string
   amount: number
+  duplicate_of: string
 }
 
-export interface ExtractedFlight {
+/** Um trecho de voo (perna) com partida, chegada e assento. */
+export interface ExtractedSegment {
   origin: string
   destination: string
   datetime: string
+  arrival_datetime: string
+  seat: string
+}
+
+export interface ExtractedFlight {
+  booking_code: string
   airline: string
   passengers: string[]
+  segments: ExtractedSegment[]
+  miles: number
+  fees: number
+  duplicate_of: string
+}
+
+export interface ExtractedHotel {
+  name: string
+  destination: string
+  check_in: string
+  check_out: string
+  miles: number
+  fees: number
+  cash_amount: number
+  booking_code: string
+  guests: string
+  duplicate_of: string
+}
+
+export interface ExtractedPassenger {
+  name: string
+  cpf: string
+  birth_date: string
+  duplicate_of: string
 }
 
 export interface ExtractedTrip {
   name: string
+  duplicate_of: string
 }
 
 export interface ExtractMeta {
@@ -38,6 +72,8 @@ export interface ExtractResult {
   programs: ExtractedProgram[]
   movements: ExtractedMovement[]
   flights: ExtractedFlight[]
+  hotels: ExtractedHotel[]
+  passengers: ExtractedPassenger[]
   trips: ExtractedTrip[]
   meta: ExtractMeta
 }
@@ -138,5 +174,28 @@ export async function extractFromDocument({
   if (!res.ok) {
     throw new ImportExtractError(data?.error || 'Falha na leitura do documento.', res.status)
   }
-  return data as ExtractResult
+  const empty = {
+    programs: [] as ExtractedProgram[],
+    movements: [] as ExtractedMovement[],
+    flights: [] as ExtractedFlight[],
+    hotels: [] as ExtractedHotel[],
+    passengers: [] as ExtractedPassenger[],
+    trips: [] as ExtractedTrip[],
+  }
+  const merged = { ...empty, ...data } as ExtractResult
+  merged.programs = (merged.programs || []).filter((p) => p && p.name)
+  merged.movements = (merged.movements || []).filter((m) => m && m.description)
+  merged.flights = (merged.flights || []).filter((f) => f && (f.segments?.length || f.airline))
+  merged.hotels = (merged.hotels || []).filter((h) => h && h.name)
+  merged.passengers = (merged.passengers || [])
+    .map((p) => ({
+      name: '',
+      cpf: '',
+      birth_date: '',
+      duplicate_of: '',
+      ...p,
+    }))
+    .filter((p) => p && p.name)
+  merged.trips = (merged.trips || []).filter((t) => t && t.name)
+  return merged
 }
