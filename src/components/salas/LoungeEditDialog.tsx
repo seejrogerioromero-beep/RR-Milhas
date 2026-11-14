@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import pb from '@/lib/pocketbase/client'
 import { useToast } from '@/hooks/use-toast'
 import { ConfirmDelete } from '@/components/forms'
-import type { LoungeRecord } from '@/types/database'
+import type { LoungeRecord, LoungeStatus, LoungeTipo } from '@/types/database'
 import {
   AREA_LABEL,
   REDE_LABEL,
@@ -55,9 +55,9 @@ export default function LoungeEditDialog({ lounge, onClose, onSaved }: LoungeEdi
   const [nome, setNome] = useState(lounge?.nome ?? '')
   const [terminal, setTerminal] = useState(lounge?.terminal ?? '')
   const [area, setArea] = useState(lounge?.area ?? 'none')
-  const [tipo, setTipo] = useState(lounge?.tipo ?? 'sala')
+  const [tipo, setTipo] = useState<LoungeTipo>(lounge?.tipo ?? 'sala')
   const [redes, setRedes] = useState<string[]>(lounge?.redes ?? [])
-  const [status, setStatus] = useState(lounge?.status ?? 'confirmado')
+  const [status, setStatus] = useState<LoungeStatus>(lounge?.status ?? 'confirmado')
   const [observacoes, setObservacoes] = useState(lounge?.observacoes ?? '')
   const [saving, setSaving] = useState(false)
 
@@ -144,7 +144,7 @@ export default function LoungeEditDialog({ lounge, onClose, onSaved }: LoungeEdi
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label>Tipo</Label>
-              <Select value={tipo} onValueChange={setTipo}>
+              <Select value={tipo} onValueChange={(v) => setTipo(v as LoungeTipo)}>
                 <SelectTrigger className="rrmilhas-input">
                   <SelectValue />
                 </SelectTrigger>
@@ -159,7 +159,7 @@ export default function LoungeEditDialog({ lounge, onClose, onSaved }: LoungeEdi
             </div>
             <div className="space-y-1.5">
               <Label>Status</Label>
-              <Select value={status} onValueChange={setStatus}>
+              <Select value={status} onValueChange={(v) => setStatus(v as LoungeStatus)}>
                 <SelectTrigger className="rrmilhas-input">
                   <SelectValue />
                 </SelectTrigger>

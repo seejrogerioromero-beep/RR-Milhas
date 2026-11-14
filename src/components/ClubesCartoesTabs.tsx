@@ -221,7 +221,7 @@ export function CartoesTab({
     try {
       const res = await pb.collection('credit_cards').getFullList({
         sort: '-created',
-        expand: 'program',
+        expand: 'program,perfil',
       })
       setCards(res as unknown as CreditCardRecord[])
     } catch (err) {
@@ -288,6 +288,7 @@ export function CartoesTab({
                 </p>
                 <p className="text-xs text-[#6E6A5E] mt-1">
                   {card.expand?.program?.name || 'Sem programa'}
+                  {card.expand?.perfil ? ` · Perfil ${card.expand.perfil.codigo}` : ''}
                 </p>
                 <p className="text-xs text-[#6E6A5E] mt-0.5">
                   {card.pontos_por_real != null && card.pontos_por_real > 0

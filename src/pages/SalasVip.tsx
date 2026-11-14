@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Layout, PageContainer } from '@/components/Layout'
+import { PageContainer } from '@/components/Layout'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRealtime } from '@/hooks/use-realtime'
 import {
@@ -18,7 +18,7 @@ import type {
 } from '@/types/database'
 import { CreditCard as CreditCardIcon, Info, Plane } from 'lucide-react'
 import BaseTab from '@/components/salas/BaseTab'
-import CardsTab from '@/components/CardsTab'
+import { CardsTab } from '@/components/CardsTab'
 import ProfilesTab from '@/components/salas/ProfilesTab'
 
 type Tab = 'base' | 'cartoes' | 'como-funciona'
@@ -54,46 +54,48 @@ export default function SalasVip() {
   }, [user])
 
   // realtime: qualquer mudança nas 5 collections recarrega
-  useRealtime(['lounges', 'airports', 'card_profiles', 'lounge_access', 'credit_cards'], reload)
+  useRealtime('lounges', reload)
+  useRealtime('airports', reload)
+  useRealtime('card_profiles', reload)
+  useRealtime('lounge_access', reload)
+  useRealtime('credit_cards', reload)
 
   return (
-    <Layout>
-      <PageContainer>
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-[#23201A]">Salas VIP</h1>
-          <p className="text-sm text-[#6E6A5E]">
-            Base Santander de salas e restaurantes — pesquisa de 14/11/2026. Confira o app da rede
-            (Mastercard Airport Experiences ou Visa Airport Companion) antes de cada viagem.
-          </p>
-        </div>
+    <PageContainer>
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-[#23201A]">Salas VIP</h1>
+        <p className="text-sm text-[#6E6A5E]">
+          Base Santander de salas e restaurantes — pesquisa de 14/11/2026. Confira o app da rede
+          (Mastercard Airport Experiences ou Visa Airport Companion) antes de cada viagem.
+        </p>
+      </div>
 
-        <div className="flex gap-2 mb-6">
-          <SegButton active={tab === 'base'} onClick={() => setTab('base')}>
-            <Plane className="h-4 w-4" /> Base de salas
-          </SegButton>
-          <SegButton active={tab === 'cartoes'} onClick={() => setTab('cartoes')}>
-            <CreditCardIcon className="h-4 w-4" /> Cartões
-          </SegButton>
-          <SegButton active={tab === 'como-funciona'} onClick={() => setTab('como-funciona')}>
-            <Info className="h-4 w-4" /> COMO FUNCIONA
-          </SegButton>
-        </div>
+      <div className="flex gap-2 mb-6">
+        <SegButton active={tab === 'base'} onClick={() => setTab('base')}>
+          <Plane className="h-4 w-4" /> Base de salas
+        </SegButton>
+        <SegButton active={tab === 'cartoes'} onClick={() => setTab('cartoes')}>
+          <CreditCardIcon className="h-4 w-4" /> Cartões
+        </SegButton>
+        <SegButton active={tab === 'como-funciona'} onClick={() => setTab('como-funciona')}>
+          <Info className="h-4 w-4" /> COMO FUNCIONA
+        </SegButton>
+      </div>
 
-        {tab === 'base' ? (
-          <BaseTab
-            airports={airports}
-            lounges={lounges}
-            profiles={profiles}
-            cards={cards}
-            access={access}
-          />
-        ) : tab === 'cartoes' ? (
-          <ProfilesTab profiles={profiles} cards={cards} />
-        ) : (
-          <CardsTab />
-        )}
-      </PageContainer>
-    </Layout>
+      {tab === 'base' ? (
+        <BaseTab
+          airports={airports}
+          lounges={lounges}
+          profiles={profiles}
+          cards={cards}
+          access={access}
+        />
+      ) : tab === 'cartoes' ? (
+        <ProfilesTab profiles={profiles} cards={cards} />
+      ) : (
+        <CardsTab />
+      )}
+    </PageContainer>
   )
 }
 

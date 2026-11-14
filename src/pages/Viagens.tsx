@@ -34,6 +34,7 @@ import { ConfirmDelete } from '@/components/forms'
 import { cn } from '@/lib/utils'
 import { TripChecklist } from '@/components/TripChecklist'
 import { generateTripChecklist } from '@/lib/tripChecklist'
+import TripLounges from '@/components/salas/TripLounges'
 
 const DAY_MS = 86400000
 
@@ -360,6 +361,9 @@ export default function Viagens() {
         ) : (
           <div className="space-y-5">
             {tripGroups.map(({ trip: t, tripFlights, tripHotels }) => {
+              const codes = tripFlights
+                .flatMap((f) => [f.origin, f.destination])
+                .filter((c): c is string => !!c && c.trim().length === 3)
               const countdown = countdownFor(t.start_date, t.end_date)
               const nights =
                 t.start_date && t.end_date ? nightsBetween(t.start_date, t.end_date) : 0
@@ -480,6 +484,14 @@ export default function Viagens() {
                       </p>
                     )}
                   </div>
+                  {codes.length > 0 && (
+                    <div className="mt-5 pt-5 border-t border-[#E8E2D6]">
+                      <h3 className="text-xs font-bold uppercase tracking-widest text-[#0E8FB8] mb-3">
+                        Salas VIP da viagem
+                      </h3>
+                      <TripLounges codes={codes} />
+                    </div>
+                  )}
                   {checklistOpenId === t.id && (
                     <div className="mt-5 pt-5 border-t border-[#E8E2D6]">
                       <h3 className="text-xs font-bold uppercase tracking-widest text-[#0E8FB8] mb-3">

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import pb from '@/lib/pocketbase/client'
 import { useToast } from '@/hooks/use-toast'
-import type { CardProfileRecord } from '@/types/database'
+import type { CardProfileRecord, CardProfileRede } from '@/types/database'
 import { REDE_LABEL } from '@/lib/salasVip'
 import { Button } from '@/components/ui/button'
 import {
@@ -28,7 +28,7 @@ interface CardProfileEditDialogProps {
   onSaved: () => void
 }
 
-const REDES = ['loungekey', 'dragonpass', 'nenhuma']
+const REDES: CardProfileRede[] = ['loungekey', 'dragonpass', 'nenhuma']
 
 /** Edição de um perfil de cartão (collection card_profiles). */
 export default function CardProfileEditDialog({
@@ -39,7 +39,7 @@ export default function CardProfileEditDialog({
   const { toast } = useToast()
   const [nome, setNome] = useState(profile?.nome ?? '')
   const [bandeira, setBandeira] = useState(profile?.bandeira ?? '')
-  const [rede, setRede] = useState(profile?.rede ?? 'nenhuma')
+  const [rede, setRede] = useState<CardProfileRede>(profile?.rede ?? 'nenhuma')
   const [acessos, setAcessos] = useState(
     profile?.acessos_ano === null || profile?.acessos_ano === undefined
       ? ''
@@ -115,7 +115,7 @@ export default function CardProfileEditDialog({
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label>Rede de salas</Label>
-              <Select value={rede} onValueChange={setRede}>
+              <Select value={rede} onValueChange={(v) => setRede(v as CardProfileRede)}>
                 <SelectTrigger className="rrmilhas-input">
                   <SelectValue />
                 </SelectTrigger>
