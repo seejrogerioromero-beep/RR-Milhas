@@ -36,9 +36,75 @@ export interface CreditCardRecord extends RecordModel {
   fechamento?: string
   /** cartão ativo? */
   ativo?: boolean
+  /** perfil de salas VIP vinculado (collection card_profiles) — opcional */
+  perfil?: string
   expand?: {
     program?: ProgramRecord
+    perfil?: CardProfileRecord
   }
+}
+
+/** Perfil de salas VIP de um cartão Santander (base importada do doc). */
+export type CardProfileRede = 'loungekey' | 'dragonpass' | 'nenhuma'
+
+export interface CardProfileRecord extends RecordModel {
+  codigo: string
+  nome: string
+  bandeira?: string
+  rede?: CardProfileRede
+  /** null/ilimitado quando vazio — número de acessos gratuitos por ano */
+  acessos_ano?: number | null
+  /** texto: "8 por ano...", "Consomem a franquia" etc. */
+  convidados_ano?: string
+  /** texto: "R$ 30 mil na soma das 3 últimas faturas fechadas" etc. */
+  gasto_trimestral_minimo?: string
+  /** texto: "R$ 2.200 (isenção com R$ 30 mil/mês...)" */
+  anuidade?: string
+  regras?: string
+  outros_beneficios?: string
+}
+
+export interface AirportRecord extends RecordModel {
+  codigo: string
+  cidade: string
+  pais?: string
+}
+
+export type LoungeArea = 'dom' | 'int' | 'publica'
+export type LoungeTipo =
+  | 'sala'
+  | 'sala_exclusiva'
+  | 'restaurante'
+  | 'descanso'
+  | 'spa'
+  | 'coworking'
+export type LoungeStatus =
+  | 'confirmado'
+  | 'a_confirmar'
+  | 'fechado_temporariamente'
+  | 'previsto'
+  | 'nao_incluso'
+
+export interface LoungeRecord extends RecordModel {
+  aeroporto?: string
+  terminal?: string
+  area?: LoungeArea
+  nome: string
+  tipo: LoungeTipo
+  /** redes aceitas (loungekey | dragonpass | mastercard_black | visa_infinite | gol) */
+  redes?: string[]
+  status?: LoungeStatus
+  observacoes?: string
+  revisado_em?: string
+  expand?: {
+    aeroporto?: AirportRecord
+  }
+}
+
+export interface LoungeAccessRecord extends RecordModel {
+  sala: string
+  cartao: string
+  condicao?: string
 }
 
 export type ProgramEntryType = 'entrada' | 'saida'

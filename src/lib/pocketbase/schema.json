@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-14T11:46:13.900Z",
+  "generatedAt": "2026-11-14T12:16:46.329Z",
   "collections": [
     {
       "name": "users",
@@ -1019,6 +1019,13 @@
           "type": "bool",
           "required": false,
           "system": false
+        },
+        {
+          "name": "perfil",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "card_profiles"
         }
       ],
       "indexes": ["CREATE INDEX idx_credit_cards_name ON credit_cards (name)"]
@@ -1225,6 +1232,302 @@
       },
       "fields": [],
       "indexes": []
+    },
+    {
+      "name": "card_profiles",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != ''",
+        "view": "@request.auth.id != ''",
+        "create": "@request.auth.id != ''",
+        "update": "@request.auth.id != ''",
+        "delete": "@request.auth.id != ''"
+      },
+      "fields": [
+        {
+          "name": "codigo",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "nome",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "bandeira",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "rede",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": ["loungekey", "dragonpass", "nenhuma"]
+        },
+        {
+          "name": "acessos_ano",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "convidados_ano",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "gasto_trimestral_minimo",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "anuidade",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "regras",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "outros_beneficios",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": [
+        "CREATE UNIQUE INDEX idx_card_profiles_codigo ON card_profiles (codigo)",
+        "CREATE INDEX idx_card_profiles_rede ON card_profiles (rede)"
+      ]
+    },
+    {
+      "name": "airports",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != ''",
+        "view": "@request.auth.id != ''",
+        "create": "@request.auth.id != ''",
+        "update": "@request.auth.id != ''",
+        "delete": "@request.auth.id != ''"
+      },
+      "fields": [
+        {
+          "name": "codigo",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "cidade",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "pais",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": [
+        "CREATE UNIQUE INDEX idx_airports_codigo ON airports (codigo)",
+        "CREATE INDEX idx_airports_pais ON airports (pais)"
+      ]
+    },
+    {
+      "name": "lounges",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != ''",
+        "view": "@request.auth.id != ''",
+        "create": "@request.auth.id != ''",
+        "update": "@request.auth.id != ''",
+        "delete": "@request.auth.id != ''"
+      },
+      "fields": [
+        {
+          "name": "aeroporto",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "airports"
+        },
+        {
+          "name": "terminal",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "area",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": ["dom", "int", "publica", "dom e int", "dom e publica"]
+        },
+        {
+          "name": "nome",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "tipo",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": ["sala", "sala_exclusiva", "restaurante", "descanso", "spa", "coworking"]
+        },
+        {
+          "name": "redes",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": [
+            "loungekey",
+            "dragonpass",
+            "mastercard_black",
+            "visa_infinite",
+            "nenhuma",
+            "a_confirmar"
+          ]
+        },
+        {
+          "name": "status",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": [
+            "confirmado",
+            "a_confirmar",
+            "fechado_temporariamente",
+            "previsto",
+            "nao_incluso"
+          ]
+        },
+        {
+          "name": "observacoes",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "revisado_em",
+          "type": "date",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": [
+        "CREATE INDEX idx_lounges_aeroporto ON lounges (aeroporto)",
+        "CREATE INDEX idx_lounges_status ON lounges (status)",
+        "CREATE INDEX idx_lounges_nome ON lounges (nome)"
+      ]
+    },
+    {
+      "name": "lounge_access",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != ''",
+        "view": "@request.auth.id != ''",
+        "create": "@request.auth.id != ''",
+        "update": "@request.auth.id != ''",
+        "delete": "@request.auth.id != ''"
+      },
+      "fields": [
+        {
+          "name": "sala",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "lounges"
+        },
+        {
+          "name": "cartao",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "card_profiles"
+        },
+        {
+          "name": "condicao",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": [
+        "CREATE INDEX idx_lounge_access_sala ON lounge_access (sala)",
+        "CREATE INDEX idx_lounge_access_cartao ON lounge_access (cartao)"
+      ]
     }
   ]
 }
