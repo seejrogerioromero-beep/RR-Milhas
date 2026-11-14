@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-14T12:16:46.329Z",
+  "generatedAt": "2026-11-14T15:20:39.604Z",
   "collections": [
     {
       "name": "users",
@@ -1528,6 +1528,164 @@
         "CREATE INDEX idx_lounge_access_sala ON lounge_access (sala)",
         "CREATE INDEX idx_lounge_access_cartao ON lounge_access (cartao)"
       ]
+    },
+    {
+      "name": "travel_rights",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != ''",
+        "view": "@request.auth.id != ''",
+        "create": "@request.auth.id != ''",
+        "update": "@request.auth.id != ''",
+        "delete": "@request.auth.id != ''"
+      },
+      "fields": [
+        {
+          "name": "pais",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": ["BR", "US"]
+        },
+        {
+          "name": "categoria",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": ["atraso", "cancelamento", "pretericao", "bagagem", "medico"]
+        },
+        {
+          "name": "gatilho",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "direito",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "prazo",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "observacao",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "fonte",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "revisado_em",
+          "type": "date",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": [
+        "CREATE INDEX idx_travel_rights_pais ON travel_rights (pais)",
+        "CREATE INDEX idx_travel_rights_categoria ON travel_rights (categoria)"
+      ]
+    },
+    {
+      "name": "insurance_coverage",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != ''",
+        "view": "@request.auth.id != ''",
+        "create": "@request.auth.id != ''",
+        "update": "@request.auth.id != ''",
+        "delete": "@request.auth.id != ''"
+      },
+      "fields": [
+        {
+          "name": "bandeira",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": ["visa_infinite", "mastercard_black"]
+        },
+        {
+          "name": "cobertura",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "limite_usd",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "emissao",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "telefone_br",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "telefone_exterior",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "condicao",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "revisado_em",
+          "type": "date",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": ["CREATE INDEX idx_insurance_bandeira ON insurance_coverage (bandeira)"]
     }
   ]
 }
