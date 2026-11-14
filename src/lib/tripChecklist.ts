@@ -5,6 +5,7 @@ import type { TripChecklistItemRecord, TripChecklistPhase, TripRecord } from '@/
 export const CHECKLIST_PHASES: { key: TripChecklistPhase; label: string }[] = [
   { key: 'antes_de_emitir', label: 'Antes de emitir' },
   { key: 'apos_emitir', label: 'Após emitir' },
+  { key: 'documentos_seguros', label: 'Documentos e seguros' },
   { key: 'semana_antes', label: '1 semana antes' },
   { key: 'dois_dias', label: '2 dias antes' },
   { key: 'dia_voo', label: 'Dia do voo' },
@@ -27,6 +28,15 @@ export const DEFAULT_CHECKLIST: Record<TripChecklistPhase, string[]> = {
     'Contratar seguro viagem',
     'Solicitar visto/eTA',
     'Verificar salas VIP nos aeroportos da rota',
+  ],
+  documentos_seguros: [
+    'Emitir bilhete de seguro Visa Infinite (PDF salvo no celular)',
+    'Emitir bilhete de seguro Mastercard Black (PDF salvo no celular)',
+    'Salvar telefones das centrais de assistência offline',
+    'Conferir que a passagem foi paga com o cartão certo (para valer o seguro)',
+    'Em problema: motivo por escrito, fotos do painel, protocolo e recibos',
+    'Bagagem: registrar RIR/PIR antes de sair da área de bagagem',
+    'Guardar cartões de embarque até concluir qualquer pedido',
   ],
   semana_antes: [
     'Avisar o banco das datas de viagem',
@@ -115,6 +125,7 @@ export function phaseState(
   switch (phase) {
     case 'antes_de_emitir':
     case 'apos_emitir':
+    case 'documentos_seguros':
       return { open: true, date: null }
     case 'semana_antes':
       date = start ? addDaysKey(start, -7) : null

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import {
   Plus,
   Map as MapIcon,
@@ -11,6 +11,7 @@ import {
   Sparkles,
   MapPin,
   ListChecks,
+  LifeBuoy,
 } from 'lucide-react'
 import { PageContainer as Layout } from '@/components/Layout'
 import { Card } from '@/components/ui/card'
@@ -37,6 +38,55 @@ import { generateTripChecklist } from '@/lib/tripChecklist'
 import TripLounges from '@/components/salas/TripLounges'
 
 const DAY_MS = 86400000
+
+/** Códigos IATA de aeroportos dos EUA (para sugerir a regra do US DOT). */
+const US_AIRPORTS = new Set([
+  'ATL',
+  'AUS',
+  'BOS',
+  'BWI',
+  'CLT',
+  'CMH',
+  'DAL',
+  'DEN',
+  'DFW',
+  'DTW',
+  'EWR',
+  'FLL',
+  'HNL',
+  'IAD',
+  'IAH',
+  'JFK',
+  'LAS',
+  'LAX',
+  'LGA',
+  'MCO',
+  'MDW',
+  'MIA',
+  'MSP',
+  'MSY',
+  'OAK',
+  'ORD',
+  'PDX',
+  'PHL',
+  'PHX',
+  'SAN',
+  'SEA',
+  'SFO',
+  'SJC',
+  'SLC',
+  'SMF',
+  'TPA',
+])
+
+/**
+ * País sugerido para a viagem a partir dos códigos IATA dos voos: qualquer
+ * trecho com origem ou destino nos EUA sugere US DOT; caso contrário, Brasil.
+ */
+function suggestedCountry(codes: string[]): 'BR' | 'US' | null {
+  if (codes.length === 0) return null
+  return codes.some((c) => US_AIRPORTS.has(c.toUpperCase())) ? 'US' : 'BR'
+}
 
 /** Contagem regressiva: "em 12 dias", "é amanhã", "é hoje" ou "em andamento". */
 function countdownFor(startDate?: string, endDate?: string): string | null {
@@ -253,6 +303,7 @@ function LinkedItem({
 /** Página VIAGENS — lista de viagens com contagem regressiva e itens agrupados. */
 export default function Viagens() {
   const { toast } = useToast()
+  const navigate = useNavigate()
   const [trips, setTrips] = useState<TripRecord[]>([])
   const [flights, setFlights] = useState<FlightRecord[]>([])
   const [hotels, setHotels] = useState<HotelRecord[]>([])
@@ -492,6 +543,27 @@ export default function Viagens() {
                       <TripLounges codes={codes} />
                     </div>
                   )}
+                  {(() => {
+                    const pais = suggestedCountry(codes)
+                    if (!pais) return null
+                    return (
+                      <div className="mt-3">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => navigate(`/se-algo-der-errado?pais=${pais}`)}
+                          className="rounded-xl border-[#16418F]/30 text-[#16418F] hover:bg-[#16418F]/5"
+                        >
+                          <LifeBuoy className="w-4 h-4 mr-1.5" /> Se algo der errado
+                          {pais === 'US' && (
+                            <span className="ml-1.5 text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-[#16418F]/10">
+                              EUA
+                            </span>
+                          )}
+                        </Button>
+                      </div>
+                    )
+                  })()}
                   {checklistOpenId === t.id && (
                     <div className="mt-5 pt-5 border-t border-[#E8E2D6]">
                       <h3 className="text-xs font-bold uppercase tracking-widest text-[#0E8FB8] mb-3">

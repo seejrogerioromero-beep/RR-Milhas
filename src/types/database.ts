@@ -252,6 +252,7 @@ export interface PassengerRecord extends RecordModel {
 export type TripChecklistPhase =
   | 'antes_de_emitir'
   | 'apos_emitir'
+  | 'documentos_seguros'
   | 'semana_antes'
   | 'dois_dias'
   | 'dia_voo'
@@ -265,4 +266,37 @@ export interface TripChecklistItemRecord extends RecordModel {
   done: boolean
   done_at?: string
   sort_order?: number
+}
+
+/* ------------------- Direitos do passageiro e seguros -------------------- */
+
+export type TravelRightPais = 'BR' | 'US'
+export type TravelRightCategoria = 'atraso' | 'cancelamento' | 'pretericao' | 'bagagem' | 'medico'
+
+/** Registro de direito do passageiro (collection travel_rights). */
+export interface TravelRightRecord extends RecordModel {
+  pais: TravelRightPais
+  categoria: TravelRightCategoria
+  /** ex.: "Atraso +2h" */
+  gatilho: string
+  direito: string
+  prazo?: string
+  observacao?: string
+  fonte?: string
+  revisado_em?: string
+}
+
+export type InsuranceBandeira = 'visa_infinite' | 'mastercard_black'
+
+/** Cobertura de seguro viagem de uma bandeira (collection insurance_coverage). */
+export interface InsuranceCoverageRecord extends RecordModel {
+  bandeira: InsuranceBandeira
+  cobertura: string
+  /** texto: "US$ 175.000", "US$ 200/dia, até 30 dias" etc. */
+  limite_usd?: string
+  emissao?: string
+  telefone_br?: string
+  telefone_exterior?: string
+  condicao?: string
+  revisado_em?: string
 }

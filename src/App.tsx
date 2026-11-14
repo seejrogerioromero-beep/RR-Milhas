@@ -16,6 +16,7 @@ import Lancamentos from './pages/Lancamentos'
 import Passageiros from './pages/Passageiros'
 import Calculadoras from './pages/Calculadoras'
 import SalasVip from './pages/SalasVip'
+import SeAlgoDerErrado from './pages/SeAlgoDerErrado'
 import Ajustes from './pages/Ajustes'
 import Login from './pages/Login'
 import ForgotPassword from './pages/ForgotPassword'
@@ -57,6 +58,7 @@ const App = () => (
             <Route path="/passageiros" element={<Passageiros />} />
             <Route path="/calculadoras" element={<Calculadoras />} />
             <Route path="/salas-vip" element={<SalasVip />} />
+            <Route path="/se-algo-der-errado" element={<SeAlgoDerErrado />} />
             <Route path="/ajustes" element={<Ajustes />} />
           </Route>
 

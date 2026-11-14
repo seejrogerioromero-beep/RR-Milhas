@@ -11,6 +11,7 @@ import {
   Users,
   Calculator,
   Armchair,
+  LifeBuoy,
   Settings,
   LogOut,
   Menu,
@@ -51,6 +52,7 @@ const SECTIONS: NavSection[] = [
       { to: '/passageiros', label: 'Passageiros', icon: Users },
       { to: '/calculadoras', label: 'Calculadoras', icon: Calculator },
       { to: '/salas-vip', label: 'Salas VIP', icon: Armchair },
+      { to: '/se-algo-der-errado', label: 'Se algo der errado', icon: LifeBuoy },
     ],
   },
 ]
