@@ -183,14 +183,35 @@ function SeguroCard({ items }: { items: InsuranceCoverageRecord[] }) {
           </Badge>
         </div>
         <ul className="divide-y divide-[#E8E2D6]">
-          {items.map((i) => (
-            <li key={i.id} className="py-2 flex items-start justify-between gap-3">
-              <span className="text-sm text-[#4A4638]">{i.cobertura}</span>
-              <span className="text-sm font-semibold text-[#16418F] tabular-nums shrink-0 text-right">
-                {i.limite_usd || '—'}
-              </span>
-            </li>
-          ))}
+          {items.map((i) => {
+            // Valores curtos (ex.: "US$ 175.000") ficam lado a lado; textos longos
+            // (ex.: condições do bilhete de seguro) viram bloco próprio para quebrar linha.
+            const limite = i.limite_usd || '—'
+            const longo = limite.length > 60
+            return (
+              <li key={i.id} className="py-2 min-w-0">
+                {longo ? (
+                  <div className="space-y-1">
+                    <p className="text-sm font-semibold text-[#4A4638] break-words">
+                      {i.cobertura}
+                    </p>
+                    <p className="text-sm font-semibold text-[#16418F] break-words whitespace-normal">
+                      {limite}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="flex items-start justify-between gap-3 min-w-0">
+                    <span className="text-sm text-[#4A4638] min-w-0 break-words">
+                      {i.cobertura}
+                    </span>
+                    <span className="text-sm font-semibold text-[#16418F] tabular-nums shrink-0 text-right">
+                      {limite}
+                    </span>
+                  </div>
+                )}
+              </li>
+            )
+          })}
         </ul>
         {first.condicao && (
           <p className="text-xs text-[#6E6A5E]">
