@@ -181,3 +181,22 @@ export interface PassengerRecord extends RecordModel {
   emissao?: string
   validade?: string
 }
+
+/** Fase da checklist de viagem — define quando cada grupo de itens aparece. */
+export type TripChecklistPhase =
+  | 'antes_de_emitir'
+  | 'apos_emitir'
+  | 'semana_antes'
+  | 'dois_dias'
+  | 'dia_voo'
+  | 'volta'
+
+/** Item da checklist de uma viagem (collection trip_checklist_items). */
+export interface TripChecklistItemRecord extends RecordModel {
+  trip: string
+  phase: TripChecklistPhase
+  title: string
+  done: boolean
+  done_at?: string
+  sort_order?: number
+}

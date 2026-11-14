@@ -10,6 +10,7 @@ import {
   CalendarDays,
   Sparkles,
   MapPin,
+  ListChecks,
 } from 'lucide-react'
 import { PageContainer as Layout } from '@/components/Layout'
 import { Card } from '@/components/ui/card'
@@ -31,6 +32,8 @@ import type { TripRecord, FlightRecord, HotelRecord } from '@/types/database'
 import { formatBRL, formatDateBR, nightsBetween } from '@/lib/miles'
 import { ConfirmDelete } from '@/components/forms'
 import { cn } from '@/lib/utils'
+import { TripChecklist } from '@/components/TripChecklist'
+import { generateTripChecklist } from '@/lib/tripChecklist'
 
 const DAY_MS = 86400000
 
@@ -107,7 +110,12 @@ function TripFormDialog({
         await pb.collection('trips').update(editing.id, data)
         toast({ title: 'Viagem atualizada', description: name.trim() })
       } else {
-        await pb.collection('trips').create(data)
+        const created = await pb.collection('trips').create(data)
+        try {
+          await generateTripChecklist(created.id)
+        } catch (err) {
+          console.error('Viagens: falha ao gerar checklist', err)
+        }
         toast({ title: 'Viagem criada', description: name.trim() })
       }
       onSaved()
@@ -251,6 +259,7 @@ export default function Viagens() {
   const [formOpen, setFormOpen] = useState(false)
   const [editing, setEditing] = useState<TripRecord | null>(null)
   const [deleteId, setDeleteId] = useState<string | null>(null)
+  const [checklistOpenId, setChecklistOpenId] = useState<string | null>(null)
 
   const reload = useCallback(async () => {
     try {
@@ -400,6 +409,17 @@ export default function Viagens() {
                     </div>
                     <div className="flex items-center gap-1 shrink-0">
                       <button
+                        onClick={() => setChecklistOpenId((cur) => (cur === t.id ? null : t.id))}
+                        className={cn(
+                          'grid place-items-center w-8 h-8 rounded-lg hover:bg-[#16418F]/10 text-[#16418F]',
+                          checklistOpenId === t.id && 'bg-[#16418F]/10',
+                        )}
+                        aria-label="Checklist da viagem"
+                        title="Checklist da viagem"
+                      >
+                        <ListChecks className="w-4 h-4" />
+                      </button>
+                      <button
                         onClick={() => {
                           setEditing(t)
                           setFormOpen(true)
@@ -460,6 +480,14 @@ export default function Viagens() {
                       </p>
                     )}
                   </div>
+                  {checklistOpenId === t.id && (
+                    <div className="mt-5 pt-5 border-t border-[#E8E2D6]">
+                      <h3 className="text-xs font-bold uppercase tracking-widest text-[#0E8FB8] mb-3">
+                        Checklist
+                      </h3>
+                      <TripChecklist trip={t} />
+                    </div>
+                  )}
                 </Card>
               )
             })}

@@ -13,6 +13,7 @@ import {
   Crown,
   Map,
   Hourglass,
+  ListChecks,
 } from 'lucide-react'
 import { PageContainer as Layout } from '@/components/Layout'
 import { Card } from '@/components/ui/card'
@@ -28,10 +29,12 @@ import type {
   ProgramEntryRecord,
   TripRecord,
   ExpectedPointRecord,
+  TripChecklistItemRecord,
 } from '@/types/database'
 import { formatMiles, formatBRL, formatDateBR, formatDateTimeBR } from '@/lib/miles'
 import { ProgramFormSheet, FlightFormSheet, HotelFormSheet } from '@/components/forms'
 import { cn } from '@/lib/utils'
+import { summarizeChecklist } from '@/lib/tripChecklist'
 
 export default function Inicio() {
   const { user } = useAuth()
@@ -42,6 +45,7 @@ export default function Inicio() {
   const [hotels, setHotels] = useState<HotelRecord[]>([])
   const [trips, setTrips] = useState<TripRecord[]>([])
   const [expected, setExpected] = useState<ExpectedPointRecord[]>([])
+  const [checklistItems, setChecklistItems] = useState<TripChecklistItemRecord[]>([])
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState<string | null>(null)
 
@@ -76,6 +80,20 @@ export default function Inicio() {
     reload()
   }, [reload])
 
+  const loadChecklist = useCallback(async () => {
+    try {
+      const items = await pb.collection('trip_checklist_items').getFullList()
+      setChecklistItems(items as unknown as TripChecklistItemRecord[])
+    } catch (err) {
+      console.error('Inicio: falha ao carregar checklist', err)
+    }
+  }, [])
+
+  useEffect(() => {
+    loadChecklist()
+  }, [loadChecklist])
+
+  useRealtime<TripChecklistItemRecord>('trip_checklist_items', () => loadChecklist())
   useRealtime<ProgramRecord>('programs', () => reload())
   useRealtime<FlightRecord>('flights', () => reload())
   useRealtime<HotelRecord>('hotels', () => reload())
@@ -122,6 +140,14 @@ export default function Inicio() {
     if (days === 1) return 'é amanhã'
     return `em ${days} dias`
   })()
+
+  // Checklist da próxima viagem: progresso e pendências da fase semana_antes
+  const nextTripChecklist = nextTrip
+    ? summarizeChecklist(
+        checklistItems.filter((i) => i.trip === nextTrip.id),
+        nextTrip,
+      )
+    : null
 
   // Total de milhas pendentes a chegar (versão manual do Balance Watch)
   const expectedMiles = expected.reduce((sum, e) => sum + (e.miles || 0), 0)
@@ -241,6 +267,18 @@ export default function Inicio() {
                         {nextTripCountdown ?? formatDateBR(nextTrip.start_date)}
                         {nextTrip.destination ? ` · ${nextTrip.destination}` : ''}
                       </p>
+                      {nextTripChecklist && nextTripChecklist.total > 0 && (
+                        <p className="text-xs font-semibold text-[#16418F] mt-2 flex items-center gap-1.5">
+                          <ListChecks className="w-3.5 h-3.5" />
+                          Checklist: {nextTripChecklist.done}/{nextTripChecklist.total}
+                        </p>
+                      )}
+                      {nextTripChecklist && nextTripChecklist.pendingWeek.length > 0 && (
+                        <p className="text-xs text-[#C4452F] mt-1">
+                          Pendentes: {nextTripChecklist.pendingWeek.slice(0, 3).join(', ')}
+                          {nextTripChecklist.pendingWeek.length > 3 ? '…' : ''}
+                        </p>
+                      )}
                     </>
                   ) : (
                     <p className="text-xs text-[#6E6A5E] mt-0.5">
