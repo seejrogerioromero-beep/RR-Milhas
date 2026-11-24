@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Lock, Eye, EyeOff, ShieldCheck, AlertCircle } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
+import { GoogleLoginButton } from '@/components/GoogleLoginButton'
 import { extractFieldErrors } from '@/lib/pocketbase/errors'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -166,6 +167,11 @@ export default function Login() {
               )}
             </Button>
           </form>
+
+          {/* Login social (Google) — botão nativo abaixo do formulário */}
+          <div className="mt-4">
+            <GoogleLoginButton onAuthenticated={() => navigate('/', { replace: true })} />
+          </div>
 
           {/* Single-account restricted disclaimer */}
           <div className="mt-8 pt-6 border-t border-[#E8E2D6] flex items-center justify-center gap-2 text-xs text-[#6E6A5E]">

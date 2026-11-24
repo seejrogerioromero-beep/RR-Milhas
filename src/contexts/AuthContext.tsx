@@ -8,6 +8,7 @@ interface AuthContextType {
   isAuthenticated: boolean
   isLoading: boolean
   login: (email: string, password: string) => Promise<void>
+  loginWithGoogle: () => Promise<void>
   logout: () => void
   refreshUser: () => Promise<void>
 }
@@ -69,6 +70,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setToken(authData.token)
   }
 
+  // OAuth2 nativo do PocketBase (popup/redirect tratado por /api/oauth2-redirect
+  // no backend). O hook auth_gate.js barra qualquer e-mail != OWNER_EMAIL com
+  // 403, então aqui só propagamos o resultado.
+  const loginWithGoogle = async () => {
+    const authData = await pb.collection('users').authWithOAuth2({ provider: 'google' })
+    setUser(authData.record as unknown as UserRecord)
+    setToken(authData.token)
+  }
+
   const logout = () => {
     pb.authStore.clear()
     setUser(null)
@@ -83,6 +93,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isAuthenticated: !!token && !!user,
         isLoading,
         login,
+        loginWithGoogle,
         logout,
         refreshUser,
       }}
